@@ -3,7 +3,6 @@ import { authorize } from "@/core/rbac/authorize";
 import { AppError } from "@/core/errors";
 import { searchPatients } from "@/modules/patients/service";
 
-export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
   try {

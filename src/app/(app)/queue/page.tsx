@@ -2,7 +2,7 @@ import { requireCtx } from "@/lib/session";
 import { listDoctors } from "@/modules/appointments/service";
 import { listTodayTokens, estimateWaitMinutes } from "@/modules/queue/service";
 import { patientNames } from "@/modules/patients/service";
-import { Alert, Badge, Button, Card, PageHeader } from "@/ui/kit";
+import { Alert, Badge, Button, Card, NoAccess, PageHeader } from "@/ui/kit";
 import { LiveRefresh } from "./LiveRefresh";
 import { callNextAction, skipAction, startConsultAction } from "./actions";
 
@@ -11,6 +11,7 @@ const TONE = { waiting: "warn", called: "info", in_consult: "info", done: "ok", 
 export default async function QueuePage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const ctx = await requireCtx();
   const { error } = await searchParams;
+  if (!ctx.permissions.includes("queue:view")) return <NoAccess what="the queue" />;
   const doctors = await listDoctors(ctx);
   const tokens = await listTodayTokens(ctx, ctx.branchId);
   const names = await patientNames(ctx, tokens.map((t) => t.patientId));

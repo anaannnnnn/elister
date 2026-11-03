@@ -1,12 +1,11 @@
 import { requireCtx } from "@/lib/session";
-import { PageHeader, Alert } from "@/ui/kit";
+import { PageHeader, Alert, NoAccess } from "@/ui/kit";
 import { createPatientAction } from "../actions";
 import { RegistrationForm } from "./RegistrationForm";
-import { AppError } from "@/core/errors";
 
 export default async function NewPatientPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const ctx = await requireCtx();
-  if (!ctx.permissions.includes("patients:create")) throw new AppError("FORBIDDEN", "You cannot register patients");
+  if (!ctx.permissions.includes("patients:create")) return <NoAccess what="patient registration" />;
   const { error } = await searchParams;
   return (
     <div className="mx-auto max-w-2xl space-y-4">

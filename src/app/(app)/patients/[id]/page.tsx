@@ -5,7 +5,7 @@ import { listPatientAppointments } from "@/modules/appointments/service";
 import { listPatientEncounters } from "@/modules/emr/service";
 import { listPatientInvoices } from "@/modules/billing/invoice";
 import { fromDecimal128 } from "@/core/money";
-import { Alert, Badge, Card, PageHeader, Table, aed, cn } from "@/ui/kit";
+import { Alert, Badge, Card, NoAccess, PageHeader, Table, aed, cn } from "@/ui/kit";
 
 const TABS = ["overview", "appointments", "encounters", "invoices", "timeline"] as const;
 type Tab = (typeof TABS)[number];
@@ -15,6 +15,7 @@ export default async function PatientPage({ params, searchParams }: { params: Pr
   const ctx = await requireCtx();
   const { id } = await params;
   const sp = await searchParams;
+  if (!ctx.permissions.includes("patients:view")) return <NoAccess what="patient records" />;
   const tab: Tab = (TABS as readonly string[]).includes(sp.tab ?? "") ? (sp.tab as Tab) : "overview";
   const p = await getPatient(ctx, id);
   const can = (perm: string) => ctx.permissions.includes(perm as never);

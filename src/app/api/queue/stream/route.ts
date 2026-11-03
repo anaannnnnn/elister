@@ -3,7 +3,6 @@ import "@/core/auth"; // registers the session -> ctx resolver
 import { subscribe } from "@/core/bus";
 import { AppError } from "@/core/errors";
 
-export const dynamic = "force-dynamic";
 
 /** Server-Sent Events. Subscribed by the caller's own orgId only; branch-scoped when the caller has a branch. */
 export async function GET(req: Request) {

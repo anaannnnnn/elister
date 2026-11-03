@@ -3,7 +3,7 @@ import { requireCtx } from "@/lib/session";
 import { getWorkspace } from "@/modules/emr/service";
 import { listEncounterCharges, listServices } from "@/modules/billing/charges";
 import { fromDecimal128 } from "@/core/money";
-import { Alert, Badge, Button, Card, Field, Input, PageHeader, Select, Table, Textarea, aed } from "@/ui/kit";
+import { Alert, Badge, Button, Card, Field, Input, NoAccess, PageHeader, Select, Table, Textarea, aed } from "@/ui/kit";
 import { amendAction, chargeAction, completeAction, diagnosisAction, noteAction, vitalsAction } from "./actions";
 
 const fmt = (d: Date) => new Date(d).toLocaleString("en-GB", { timeZone: "Asia/Dubai", dateStyle: "medium", timeStyle: "short" });
@@ -12,6 +12,7 @@ export default async function EncounterPage({ params, searchParams }: { params: 
   const ctx = await requireCtx();
   const { id } = await params;
   const { error } = await searchParams;
+  if (!ctx.permissions.includes("emr:view")) return <NoAccess what="clinical records" />;
   const w = await getWorkspace(ctx, id);
   const can = (p: string) => ctx.permissions.includes(p as never);
   const services = await listServices(ctx);

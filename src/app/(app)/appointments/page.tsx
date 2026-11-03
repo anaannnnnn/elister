@@ -4,7 +4,7 @@ import { todayYmd } from "@/lib/range";
 import { dubaiParts, hhmmToMinutes } from "@/core/time";
 import { listAppointments, listDoctors } from "@/modules/appointments/service";
 import { getPatient, searchPatients } from "@/modules/patients/service";
-import { Alert, Badge, Button, Card, Field, Input, PageHeader, Select, Table } from "@/ui/kit";
+import { Alert, Badge, Button, Card, Field, Input, NoAccess, PageHeader, Select, Table } from "@/ui/kit";
 import { bookAction, cancelAction, checkInAction, noShowAction } from "./actions";
 import { DayGrid, type GridDoctor } from "./DayGrid";
 import { PatientPicker } from "./PatientPicker";
@@ -12,6 +12,7 @@ import { PatientPicker } from "./PatientPicker";
 export default async function AppointmentsPage({ searchParams }: { searchParams: Promise<{ date?: string; patient?: string; error?: string }> }) {
   const ctx = await requireCtx();
   const sp = await searchParams;
+  if (!ctx.permissions.includes("appointments:view")) return <NoAccess what="appointments" />;
   const date = sp.date && /^\d{4}-\d{2}-\d{2}$/.test(sp.date) ? sp.date : todayYmd();
   const from = new Date(`${date}T00:00:00+04:00`);
   const to = new Date(from.getTime() + 86400000);

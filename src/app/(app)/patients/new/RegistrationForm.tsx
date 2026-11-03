@@ -69,7 +69,8 @@ export function RegistrationForm({ action }: { action: (fd: FormData) => Promise
 
       <div className="flex justify-between">
         <Button type="button" variant="outline" onClick={() => setStep((s) => s - 1)} disabled={step === 0}>Back</Button>
-        {step < STEPS.length - 1 ? <Button type="button" onClick={next}>Continue</Button> : <Button type="submit">Save patient</Button>}
+        {/* distinct keys force a remount: otherwise the click that reaches the last step also submits the form */}
+        {step < STEPS.length - 1 ? <Button key="next" type="button" onClick={next}>Continue</Button> : <Button key="save" type="submit">Save patient</Button>}
       </div>
     </form>
   );

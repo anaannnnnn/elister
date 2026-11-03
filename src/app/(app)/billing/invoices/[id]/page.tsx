@@ -5,7 +5,7 @@ import { fromDecimal128 } from "@/core/money";
 import { getPatient } from "@/modules/patients/service";
 import { getInvoice } from "@/modules/billing/invoice";
 import { listInvoicePayments } from "@/modules/billing/payment";
-import { Alert, Badge, Button, Card, Field, Input, PageHeader, Select, Table, aed } from "@/ui/kit";
+import { Alert, Badge, Button, Card, Field, Input, NoAccess, PageHeader, Select, Table, aed } from "@/ui/kit";
 import { creditNoteAction, payAction, refundAction } from "../../actions";
 
 const fmt = (d: Date) => new Date(d).toLocaleString("en-GB", { timeZone: "Asia/Dubai", dateStyle: "medium", timeStyle: "short" });
@@ -15,6 +15,7 @@ export default async function InvoicePage({ params, searchParams }: { params: Pr
   const ctx = await requireCtx();
   const { id } = await params;
   const { error } = await searchParams;
+  if (!ctx.permissions.includes("billing:view")) return <NoAccess what="invoices" />;
   const inv = await getInvoice(ctx, id);
   const patient = await getPatient(ctx, inv.patientId);
   const pays = await listInvoicePayments(ctx, id);

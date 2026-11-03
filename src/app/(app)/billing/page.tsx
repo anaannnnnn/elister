@@ -4,13 +4,14 @@ import { fromDecimal128 } from "@/core/money";
 import { getPatient, patientNames } from "@/modules/patients/service";
 import { listUnbilledCharges } from "@/modules/billing/charges";
 import { listOpenInvoices } from "@/modules/billing/invoice";
-import { Alert, Badge, Button, Card, PageHeader, Table, aed } from "@/ui/kit";
+import { Alert, Badge, Button, Card, NoAccess, PageHeader, Table, aed } from "@/ui/kit";
 import { PatientPicker } from "../appointments/PatientPicker";
 import { finalizeAction } from "./actions";
 
 export default async function BillingPage({ searchParams }: { searchParams: Promise<{ patientId?: string; error?: string }> }) {
   const ctx = await requireCtx();
   const { patientId, error } = await searchParams;
+  if (!ctx.permissions.includes("billing:view")) return <NoAccess what="billing" />;
   const patient = patientId ? await getPatient(ctx, patientId).catch(() => null) : null;
   const unbilled = patient ? await listUnbilledCharges(ctx, patient._id) : [];
   const open = await listOpenInvoices(ctx);

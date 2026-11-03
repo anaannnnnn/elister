@@ -4,11 +4,12 @@ import { getPatient } from "@/modules/patients/service";
 import { getReceipt } from "@/modules/billing/payment";
 import { PrintButton } from "./PrintButton";
 import Link from "next/link";
-import { aed } from "@/ui/kit";
+import { NoAccess, aed } from "@/ui/kit";
 
 export default async function ReceiptPage({ params }: { params: Promise<{ id: string }> }) {
   const ctx = await requireCtx();
   const { id } = await params;
+  if (!ctx.permissions.includes("billing:view")) return <NoAccess what="receipts" />;
   const { payment: p, invoice, org } = await getReceipt(ctx, id);
   const patient = await getPatient(ctx, p.patientId);
   return (

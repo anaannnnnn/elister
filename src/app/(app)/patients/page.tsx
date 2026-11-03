@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { requireCtx } from "@/lib/session";
 import { searchPatients } from "@/modules/patients/service";
-import { Button, Card, Input, PageHeader, Table } from "@/ui/kit";
+import { Button, Card, Input, NoAccess, PageHeader, Table } from "@/ui/kit";
 
 export default async function PatientsPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const ctx = await requireCtx();
   const { q = "" } = await searchParams;
+  if (!ctx.permissions.includes("patients:view")) return <NoAccess what="patient records" />;
   const hits = q.trim().length >= 2 ? await searchPatients(ctx, q) : [];
   return (
     <div className="space-y-4">

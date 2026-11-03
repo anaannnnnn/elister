@@ -6,7 +6,7 @@ import { pnl } from "@/modules/reports/pnl";
 import { arAging } from "@/modules/reports/arAging";
 import { listJournals } from "@/modules/ledger/journal";
 import { listPeriods } from "@/modules/ledger/periods";
-import { Alert, Badge, Button, Card, Input, PageHeader, Table, aed, cn } from "@/ui/kit";
+import { Alert, Badge, Button, Card, Input, NoAccess, PageHeader, Table, aed, cn } from "@/ui/kit";
 import { lockAction, reverseAction } from "./actions";
 
 const TABS = ["trial-balance", "pnl", "aging", "journal", "periods"] as const;
@@ -19,6 +19,7 @@ export default async function AccountingPage({ searchParams }: { searchParams: P
   const tab = (TABS as readonly string[]).includes(sp.tab ?? "") ? (sp.tab as (typeof TABS)[number]) : "trial-balance";
   const { from, to, fromStr, toStr } = parseRange(sp);
   const can = (p: string) => ctx.permissions.includes(p as never);
+  if (!can("ledger:view")) return <NoAccess what="accounting" />;
 
   return (
     <div className="space-y-4">

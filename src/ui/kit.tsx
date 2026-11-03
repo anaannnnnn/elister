@@ -94,3 +94,12 @@ export function PageHeader({ title, sub, actions }: { title: ReactNode; sub?: Re
 
 export const Skeleton = ({ className }: { className?: string }) => <div className={cn("skeleton h-4", className)} aria-hidden />;
 export const aed = (v: string | number) => `AED ${Number(v).toLocaleString("en-AE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+export function NoAccess({ what = "this page" }: { what?: string }) {
+  return (
+    <div className="mx-auto max-w-md pt-16 text-center" role="alert">
+      <h1 className="text-lg font-semibold">Access restricted</h1>
+      <p className="mt-1 text-sm text-muted">Your role does not have permission to view {what}. Ask an administrator if you need access.</p>
+    </div>
+  );
+}
