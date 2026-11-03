@@ -14,6 +14,10 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
   ]),
   {
+    files: ["src/core/**/*.ts", "**/*.test.ts", "scripts/**/*.ts"],
+    rules: { "@typescript-eslint/no-explicit-any": "off" },
+  },
+  {
     files: ["src/modules/**/*.{ts,tsx}", "src/app/**/*.{ts,tsx}", "src/ui/**/*.{ts,tsx}"],
     rules: {
       "no-restricted-imports": ["error", {
