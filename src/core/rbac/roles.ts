@@ -25,12 +25,14 @@ const RAW: Record<RoleKey, string[]> = {
     "compliance:*", "audit:view", "audit:audit", ...v("radiology", "pharmacy", "queue"), "laboratory:view", "laboratory:approve",
   ],
   doctor: [
+    "hospital:view", "hospital:create", "hospital:update", "hospital:approve",
     "patients:view", "patients:update", "appointments:view", "appointments:update", "queue:view", "queue:update",
     "emr:view", "emr:create", "emr:update", "emr:approve", "pharmacy:view", "pharmacy:create",
     "laboratory:view", "laboratory:create", "radiology:view", "radiology:create", "dashboard:view", "billing:view",
     "insurance:view",
   ],
   nurse: [
+    "hospital:view", "hospital:create", "hospital:update",
     "patients:view", "appointments:view", "queue:view", "queue:update", "emr:view", "emr:create", "emr:update",
     "laboratory:view", "dashboard:view",
   ],

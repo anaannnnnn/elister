@@ -105,6 +105,16 @@ INDEXES.push(
   ["advances", { orgId: 1, key: 1 }, { unique: true }],
 );
 
+INDEXES.push(
+  ["beds", { orgId: 1, wardId: 1, bedNo: 1 }, { unique: true }],
+  ["admissions", { orgId: 1, patientId: 1 }, { unique: true, partialFilterExpression: { status: "admitted" } }],
+  ["wards", { orgId: 1, code: 1 }, { unique: true }],
+  ["theatres", { orgId: 1, code: 1 }, { unique: true }],
+  ["er_visits", { orgId: 1, status: 1, arrivalAt: 1 }],
+  ["surgeries", { orgId: 1, theatreId: 1, start: 1 }],
+  ["mar", { orgId: 1, admissionId: 1, scheduledAt: 1 }],
+);
+
 export async function ensureIndexes(): Promise<void> {
   const db = await getDb();
   for (const [name, keys, opts] of INDEXES) await db.collection(name).createIndex(keys, opts);

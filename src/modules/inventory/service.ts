@@ -212,7 +212,7 @@ export async function listBatches(ctx: Ctx, itemId?: string) {
   return batches(ctx.orgId).find({ ...(itemId ? { itemId } : {}), qtyOnHand: { $gt: 0 } } as never, { sort: { expiry: 1 }, limit: 500 });
 }
 export async function getItem(ctx: Ctx, id: string) {
-  if (!ctx.permissions.includes("inventory:view") && !ctx.permissions.includes("pharmacy:view")) throw new AppError("FORBIDDEN", "Missing permission inventory:view");
+  if (!["inventory:view", "pharmacy:view", "hospital:view", "emr:update"].some((p) => ctx.permissions.includes(p as never))) throw new AppError("FORBIDDEN", "Missing permission inventory:view");
   return loadItem(ctx.orgId, id);
 }
 export async function listMovements(ctx: Ctx, itemId: string) {
