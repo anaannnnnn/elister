@@ -59,6 +59,21 @@ INDEXES.push(
   ["eligibility_checks", { orgId: 1, policyId: 1, at: -1 }],
 );
 
+INDEXES.push(
+  ["inv_items", { orgId: 1, sku: 1 }, { unique: true }],
+  ["inv_batches", { orgId: 1, itemId: 1, locationId: 1, batchNo: 1 }, { unique: true }],
+  ["inv_batches", { orgId: 1, itemId: 1, expiry: 1 }],
+  ["inv_movements", { orgId: 1, itemId: 1, at: -1 }],
+);
+
+INDEXES.push(
+  ["grns", { orgId: 1, idempotencyKey: 1 }, { unique: true }],
+  ["supplier_invoices", { orgId: 1, supplierId: 1, invoiceNo: 1 }, { unique: true }],
+  ["supplier_payments", { orgId: 1, idempotencyKey: 1 }, { unique: true }],
+  ["purchase_orders", { orgId: 1, number: 1 }, { unique: true }],
+  ["purchase_requests", { orgId: 1, number: 1 }, { unique: true }],
+);
+
 export async function ensureIndexes(): Promise<void> {
   const db = await getDb();
   for (const [name, keys, opts] of INDEXES) await db.collection(name).createIndex(keys, opts);
