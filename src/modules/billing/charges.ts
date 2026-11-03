@@ -154,3 +154,18 @@ export async function reduceItemCharge(ctx: Ctx, encounterId: string, autoKey: s
   const left = c.qty - qty;
   await charges(ctx.orgId).updateOne({ _id: c._id } as never, { $set: left <= 0 ? { status: "void", qty: 0 } : { qty: left } } as never, s);
 }
+
+/** Charge for a catalogue service (e.g. a lab test) tied to an encounter. Idempotent on autoKey. Runs in the caller's transaction. */
+export async function createServiceCharge(ctx: Ctx, p: { encounterId: string; patientId: string; doctorId?: string; serviceId: string; qty: number; autoKey: string }, s: ClientSession): Promise<void> {
+  const svc = await tenantCol<Service>(ctx.orgId, "services").findOne({ _id: p.serviceId, active: true } as never, s);
+  if (!svc) throw new AppError("NOT_FOUND", "Billable service not found");
+  const c: Charge = {
+    _id: newId(), patientId: p.patientId, encounterId: p.encounterId, serviceId: svc._id, qty: p.qty, ...(await snapshot(ctx.orgId, svc, s)),
+    doctorId: p.doctorId, departmentId: svc.departmentId, status: "unbilled", autoKey: p.autoKey, createdAt: new Date(), createdBy: ctx.userId,
+  };
+  const res = await charges(ctx.orgId).updateOne({ encounterId: p.encounterId, autoKey: p.autoKey } as never, { $setOnInsert: c } as never, s, { upsert: true });
+  if (res.upsertedCount) {
+    await audit(s, { orgId: ctx.orgId, actorId: ctx.userId, action: "charge.auto", resource: "charge", resourceId: c._id, after: { serviceCode: c.serviceCode } });
+    await emit(s, ctx.orgId, "charge.created", { chargeId: c._id });
+  }
+}

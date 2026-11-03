@@ -80,6 +80,15 @@ INDEXES.push(
   ["dispensings", { orgId: 1, idempotencyKey: 1 }, { unique: true }],
 );
 
+INDEXES.push(
+  ["lab_tests", { orgId: 1, code: 1 }, { unique: true }],
+  ["lab_orders", { orgId: 1, status: 1, orderedAt: 1 }],
+  ["lab_orders", { orgId: 1, patientId: 1, orderedAt: -1 }],
+  ["lab_critical_alerts", { orgId: 1, status: 1 }],
+  ["rad_orders", { orgId: 1, status: 1, orderedAt: 1 }],
+  ["notifications", { orgId: 1, userId: 1, at: -1 }],
+);
+
 export async function ensureIndexes(): Promise<void> {
   const db = await getDb();
   for (const [name, keys, opts] of INDEXES) await db.collection(name).createIndex(keys, opts);

@@ -22,7 +22,7 @@ const RAW: Record<RoleKey, string[]> = {
   ],
   medical_director: [
     "patients:view", "appointments:view", "emr:view", "emr:approve", "emr:audit", "dashboard:view", "reports:view",
-    "compliance:*", "audit:view", "audit:audit", ...v("laboratory", "radiology", "pharmacy", "queue"),
+    "compliance:*", "audit:view", "audit:audit", ...v("radiology", "pharmacy", "queue"), "laboratory:view", "laboratory:approve",
   ],
   doctor: [
     "patients:view", "patients:update", "appointments:view", "appointments:update", "queue:view", "queue:update",
@@ -47,7 +47,7 @@ const RAW: Record<RoleKey, string[]> = {
   pharmacist: [
     "patients:view", "pharmacy:*", "inventory:view", "inventory:update", "emr:view", "dashboard:view", "billing:view",
   ],
-  lab_technician: ["patients:view", "laboratory:view", "laboratory:create", "laboratory:update", "dashboard:view", "inventory:view"],
+  lab_technician: ["patients:view", "laboratory:view", "laboratory:create", "laboratory:update", "laboratory:approve", "dashboard:view", "inventory:view"],
   radiologist: ["patients:view", "radiology:*", "emr:view", "dashboard:view"],
   accountant: [
     "ledger:view", "ledger:create", "ledger:export", "billing:*", "reports:view", "reports:export", "dashboard:view",

@@ -229,5 +229,6 @@ export async function listEncounterDiagnoses(ctx: Ctx, encounterIds: string[]): 
 export async function getEncounterBrief(ctx: Ctx, encounterId: string) {
   if (!ctx.permissions.includes("emr:view") && !ctx.permissions.includes("pharmacy:view") && !ctx.permissions.includes("laboratory:view")) throw new AppError("FORBIDDEN", "Missing permission emr:view");
   const e = await loadEncounter(ctx, encounterId);
-  return { _id: e._id, patientId: e.patientId, doctorId: e.doctorId, branchId: e.branchId, status: e.status };
+  const staff = await tenantCol<{ userId?: string }>(ctx.orgId, "staff").findOne({ _id: e.doctorId } as never);
+  return { _id: e._id, patientId: e.patientId, doctorId: e.doctorId, doctorUserId: staff?.userId, branchId: e.branchId, status: e.status };
 }
