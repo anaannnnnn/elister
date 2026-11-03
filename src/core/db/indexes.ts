@@ -27,3 +27,9 @@ INDEXES.push(
   ["fiscal_periods", { orgId: 1, year: 1, month: 1 }, { unique: true }],
   ["memberships", { userId: 1 }],
 );
+
+INDEXES.push(
+  ["patients", { orgId: 1, mrn: 1 }, { unique: true }],
+  ["patients", { orgId: 1, emiratesIdHash: 1 }],
+  ["patients", { orgId: 1, fullName: 1, dob: 1 }],
+);

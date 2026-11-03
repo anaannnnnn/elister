@@ -7,6 +7,7 @@ let rs: MongoMemoryReplSet | undefined;
 export async function setup() {
   rs = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
   process.env.TEST_MONGODB_URI = rs.getUri();
+  process.env.FIELD_ENCRYPTION_KEY = Buffer.from("0123456789abcdef0123456789abcdef").toString("base64");
 }
 export async function teardown() {
   await rs?.stop();
