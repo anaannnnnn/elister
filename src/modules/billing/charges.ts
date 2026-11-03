@@ -22,6 +22,8 @@ export type Charge = {
   taxCode: string;
   taxRate: Decimal128;
   revenueAccountSystem: string;
+  doctorId?: string;
+  departmentId?: string;
   status: ChargeStatus;
   invoiceId?: string;
   autoKey?: string; // idempotency key for rule-generated charges
@@ -60,10 +62,12 @@ export async function addCharge(ctx: Ctx, input: z.input<typeof AddInput>): Prom
   const svc = await tenantCol<Service>(ctx.orgId, "services").findOne({ _id: p.data.serviceId, active: true } as never);
   if (!svc) throw new AppError("NOT_FOUND", "Service not found");
 
+  const doc = await tenantCol<{ departmentId?: string }>(ctx.orgId, "staff").findOne({ _id: enc.doctorId } as never);
   return withTransaction(async (s) => {
     const c: Charge = {
       _id: newId(), patientId: enc.patientId, encounterId: enc._id, serviceId: svc._id, qty: p.data.qty,
-      ...(await snapshot(ctx.orgId, svc, s)), status: "unbilled", createdAt: new Date(), createdBy: ctx.userId,
+      ...(await snapshot(ctx.orgId, svc, s)), doctorId: enc.doctorId, departmentId: doc?.departmentId ?? svc.departmentId,
+      status: "unbilled", createdAt: new Date(), createdBy: ctx.userId,
     };
     await charges(ctx.orgId).insertOne(c, s);
     await audit(s, { orgId: ctx.orgId, actorId: ctx.userId, action: "charge.add", resource: "charge", resourceId: c._id, after: { serviceCode: c.serviceCode, qty: c.qty } });
@@ -89,7 +93,8 @@ export async function ensureConsultationCharge(ctx: Ctx, enc: Encounter, s: Clie
   }
   const c: Charge = {
     _id: newId(), patientId: enc.patientId, encounterId: enc._id, serviceId: svc._id, qty: 1,
-    ...(await snapshot(ctx.orgId, svc, s)), status: "unbilled", autoKey: "consultation", createdAt: new Date(), createdBy: ctx.userId,
+    ...(await snapshot(ctx.orgId, svc, s)), doctorId: enc.doctorId, departmentId: doc?.departmentId ?? svc.departmentId,
+    status: "unbilled", autoKey: "consultation", createdAt: new Date(), createdBy: ctx.userId,
   };
   const res = await charges(ctx.orgId).updateOne({ encounterId: enc._id, autoKey: "consultation" } as never, { $setOnInsert: c } as never, s, { upsert: true });
   if (res.upsertedCount) {

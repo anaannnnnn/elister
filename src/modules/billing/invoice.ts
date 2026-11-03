@@ -20,14 +20,23 @@ const charges = (orgId: string) => tenantCol<Charge>(orgId, "charges");
 export const yearOf = (d = new Date()) => dubaiParts(d).ymd.slice(0, 4);
 export const docNo = (prefix: string, year: string, n: number) => `${prefix}-${year}-${String(n).padStart(6, "0")}`;
 
-/** Revenue (net) per account and VAT per invoice, rolled up for posting. */
-async function postingLines(orgId: string, lines: InvoiceLine[]) {
-  const rev = new Map<string, Decimal>();
-  for (const l of lines) rev.set(l.revenueAccountSystem, (rev.get(l.revenueAccountSystem) ?? money(0)).plus(fromDecimal128(l.net)));
-  const out: { accountId: string; amount: Decimal }[] = [];
-  for (const [system, amount] of rev) out.push({ accountId: (await accountBySystem(orgId, system))._id, amount });
-  return out;
+/** Revenue (net) rolled up per account + doctor + department so reports can slice by dimension. */
+async function postingLines(orgId: string, lines: InvoiceLine[], branchId: string): Promise<LineInput[] & { amount?: never }[]> {
+  const groups = new Map<string, { system: string; doctorId?: string; departmentId?: string; amount: Decimal }>();
+  for (const l of lines) {
+    const k = [l.revenueAccountSystem, l.doctorId ?? "", l.departmentId ?? ""].join("|");
+    const g = groups.get(k) ?? { system: l.revenueAccountSystem, doctorId: l.doctorId, departmentId: l.departmentId, amount: money(0) };
+    g.amount = g.amount.plus(fromDecimal128(l.net));
+    groups.set(k, g);
+  }
+  const out: (LineInput & { _amount: Decimal })[] = [];
+  for (const g of groups.values()) {
+    out.push({ accountId: (await accountBySystem(orgId, g.system))._id, _amount: g.amount, dims: { branchId, doctorId: g.doctorId, departmentId: g.departmentId } });
+  }
+  return out as never;
 }
+const asCredit = (ls: LineInput[]): LineInput[] => (ls as (LineInput & { _amount: Decimal })[]).map(({ _amount, ...l }) => ({ ...l, credit: _amount.toFixed(2) }));
+const asDebit = (ls: LineInput[]): LineInput[] => (ls as (LineInput & { _amount: Decimal })[]).map(({ _amount, ...l }) => ({ ...l, debit: _amount.toFixed(2) }));
 
 export async function finalizeInvoice(ctx: Ctx, input: { patientId: string; chargeIds: string[] }): Promise<Invoice> {
   assertPermission(ctx, "billing:create");
@@ -58,7 +67,7 @@ export async function finalizeInvoice(ctx: Ctx, input: { patientId: string; char
       const net = round2(fromDecimal128(c.unitPrice).times(c.qty));
       const vat = round2(net.times(fromDecimal128(c.taxRate)).div(100));
       return {
-        chargeId: c._id, serviceCode: c.serviceCode, name: c.name, qty: c.qty, unitPrice: c.unitPrice, taxCode: c.taxCode, taxRate: c.taxRate,
+        chargeId: c._id, serviceCode: c.serviceCode, name: c.name, qty: c.qty, unitPrice: c.unitPrice, taxCode: c.taxCode, taxRate: c.taxRate, doctorId: c.doctorId, departmentId: c.departmentId,
         net: toDecimal128(net), vat: toDecimal128(vat), gross: toDecimal128(net.plus(vat)), revenueAccountSystem: c.revenueAccountSystem,
       };
     });
@@ -77,7 +86,7 @@ export async function finalizeInvoice(ctx: Ctx, input: { patientId: string; char
       date: new Date(), memo: `Invoice ${number}`, sourceRef: { type: "invoice", id: invId }, idempotencyKey: `invoice:${invId}`,
       lines: [
         { accountId: (await accountBySystem(ctx.orgId, "ar_patient"))._id, debit: total.toFixed(2), dims: { branchId: ctx.branchId } },
-        ...(await postingLines(ctx.orgId, lines)).map((r): LineInput => ({ accountId: r.accountId, credit: r.amount.toFixed(2), dims: { branchId: ctx.branchId } })),
+        ...asCredit(await postingLines(ctx.orgId, lines, ctx.branchId)),
         ...(vatTotal.gt(0) ? [{ accountId: (await accountBySystem(ctx.orgId, "vat_output"))._id, credit: vatTotal.toFixed(2), dims: { branchId: ctx.branchId } }] : []),
       ],
     }, s);
@@ -116,7 +125,7 @@ export async function issueCreditNote(ctx: Ctx, input: { invoiceId: string; reas
     const je = await postJournalSystem(ctx, {
       date: new Date(), memo: `Credit note ${number} for ${inv.number}`, sourceRef: { type: "credit_note", id: cnId }, idempotencyKey: `creditnote:${cnId}`,
       lines: [
-        ...(await postingLines(ctx.orgId, inv.lines)).map((r): LineInput => ({ accountId: r.accountId, debit: r.amount.toFixed(2), dims: { branchId: ctx.branchId } })),
+        ...asDebit(await postingLines(ctx.orgId, inv.lines, ctx.branchId)),
         ...(vat.gt(0) ? [{ accountId: (await accountBySystem(ctx.orgId, "vat_output"))._id, debit: vat.toFixed(2), dims: { branchId: ctx.branchId } }] : []),
         { accountId: (await accountBySystem(ctx.orgId, "ar_patient"))._id, credit: total.toFixed(2), dims: { branchId: ctx.branchId } },
       ],

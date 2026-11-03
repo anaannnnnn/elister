@@ -14,6 +14,8 @@ export type InvoiceLine = {
   vat: Decimal128;
   gross: Decimal128;
   revenueAccountSystem: string;
+  doctorId?: string;
+  departmentId?: string;
 };
 
 export type Invoice = {
