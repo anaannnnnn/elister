@@ -174,7 +174,7 @@ export async function getReceipt(ctx: Ctx, paymentId: string) {
   const pay = await payments(ctx.orgId).findOne({ _id: paymentId } as never);
   if (!pay) throw new AppError("NOT_FOUND", "Payment not found");
   const inv = await invoices(ctx.orgId).findOne({ _id: pay.invoiceId } as never);
-  const org = await tenantCol<{ name: string; currency: string; trn?: string }>(ctx.orgId, "orgs").findOne({ _id: ctx.orgId } as never);
+  const org = await tenantCol<{ name: string; currency: string; trn?: string; address?: string; phone?: string; email?: string; website?: string }>(ctx.orgId, "orgs").findOne({ _id: ctx.orgId } as never);
   return { payment: pay, invoice: inv, org };
 }
 

@@ -5,6 +5,7 @@ import { getReceipt } from "@/modules/billing/payment";
 import { PrintButton } from "./PrintButton";
 import Link from "next/link";
 import { NoAccess, aed } from "@/ui/kit";
+import { LogoAuto } from "@/ui/brand";
 
 export default async function ReceiptPage({ params }: { params: Promise<{ id: string }> }) {
   const ctx = await requireCtx();
@@ -17,7 +18,10 @@ export default async function ReceiptPage({ params }: { params: Promise<{ id: st
       <div className="no-print flex justify-between"><Link href={`/billing/invoices/${p.invoiceId}`} className="text-sm text-primary hover:underline">← Invoice</Link><PrintButton /></div>
       <article className="rounded-ui border border-border bg-surface p-6 text-sm" aria-label="Receipt">
         <header className="mb-4 border-b border-border pb-3 text-center">
-          <h1 className="text-lg font-semibold">{org?.name ?? "Receipt"}</h1>
+          <div className="mb-2 flex justify-center"><LogoAuto className="h-12" /></div>
+          <h1 className="sr-only">{org?.name ?? "Receipt"}</h1>
+          {org?.address && <p className="text-xs text-muted">{org.address}</p>}
+          {(org?.phone || org?.website) && <p className="text-xs text-muted">{[org?.phone, org?.website].filter(Boolean).join(" · ")}</p>}
           {org?.trn && <p className="text-xs text-muted">TRN {org.trn}</p>}
           <p className="mt-1 font-mono text-base">{p.receiptNo}</p>
         </header>

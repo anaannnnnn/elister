@@ -4,6 +4,7 @@ config({ path: ".env.local" });
 import { ensureIndexes, getDb, closeClient } from "../src/core/db";
 import { seedOrg, DEMO_DOCTORS } from "../src/modules/org/seed";
 import { seedExtras } from "../src/modules/org/seed-extras";
+import { seedActivity } from "./seed-activity";
 import { getAuth } from "../src/core/auth";
 import { createPatient } from "../src/modules/patients/service";
 import { permissionsFor, type RoleKey } from "../src/core/rbac/roles";
@@ -33,7 +34,7 @@ const USERS: U[] = [
   { email: "patient@demo.local", name: "Demo Patient (portal)", roles: ["patient_portal_user"], portal: true },
 ];
 
-export async function seedAll() {
+export async function seedAll(opts: { activity?: boolean } = {}) {
   await ensureIndexes();
   const { orgId, branchId } = await seedOrg();
   await seedExtras(orgId);
@@ -58,6 +59,7 @@ export async function seedAll() {
     );
     if (u.userKey) await db.collection("staff").updateOne({ orgId, userKey: u.userKey }, { $set: { userId: user.id } });
   }
+  if (opts.activity || process.env.SEED_DEMO_ACTIVITY === "1") await seedActivity(orgId, branchId);
   console.log(`Seeded org ${orgId} with ${USERS.length} synthetic users. Password: ${PASSWORD}`);
 }
 

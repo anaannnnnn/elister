@@ -1,4 +1,4 @@
-# UAE Healthcare OS
+# Elister Med — clinic management platform
 
 A multi-tenant clinic / medical-centre platform for the UAE (AED, Asia/Dubai, English + Arabic with RTL). Next.js App Router, TypeScript strict, MongoDB, Better Auth.
 

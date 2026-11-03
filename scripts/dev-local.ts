@@ -21,12 +21,12 @@ async function main() {
     DISPLAY_KEY: process.env.DISPLAY_KEY ?? "local-display-key",
   });
   const { seedAll } = await import("./seed");
-  await seedAll();
+  await seedAll({ activity: true });
   const nextBin = path.resolve("node_modules/next/dist/bin/next");
   const next = spawn(process.execPath, [nextBin, mode, "-p", port], { env: process.env, stdio: "inherit" });
   const stop = async () => { next.kill(); await rs.stop(); process.exit(0); };
   process.on("SIGINT", stop); process.on("SIGTERM", stop);
   next.on("exit", stop);
-  console.log(`\nUAE Healthcare OS local: http://localhost:${port}  (admin@demo.local / Demo-Only-Pass-2026!)`);
+  console.log(`\nElister Med local: http://localhost:${port}  (admin@demo.local / Demo-Only-Pass-2026!)`);
 }
 main().catch((e) => { console.error(e); process.exit(1); });

@@ -37,6 +37,12 @@ async function kpis(ctx: Ctx, f: Range): Promise<Kpis> {
   const byDoc = await revenueBy(ctx, { ...f, by: "doctor" });
   const byDept = await revenueBy(ctx, { ...f, by: "department" });
 
+  const label = new Map<string, string>([
+    ...(await tenantCol<{ _id: string; name: string }>(ctx.orgId, "staff").find({} as never)).map((d) => [d._id, d.name.replace(/\s*\(.*?\)\s*/g, "").trim()] as [string, string]),
+    ...(await tenantCol<{ _id: string; name: string }>(ctx.orgId, "departments").find({} as never)).map((d) => [d._id, d.name] as [string, string]),
+  ]);
+  const named = (rows: { key: string; amount: import("decimal.js").default }[]) => rows.map((r) => ({ key: label.get(r.key) ?? (r.key === "unassigned" ? "Unassigned" : r.key), amount: r.amount.toFixed(2) }));
+
   const open = await tenantCol<Invoice>(ctx.orgId, "invoices").find({ status: { $in: ["finalized", "partially_paid"] } } as never);
   const receivables = sum(open.map((i) => fromDecimal128(i.balance)));
 
@@ -56,8 +62,8 @@ async function kpis(ctx: Ctx, f: Range): Promise<Kpis> {
     cancellationRate: rate(appts.filter((a) => a.status === "cancelled").length, appts.length),
     noShowRate: rate(appts.filter((a) => a.status === "no_show").length, appts.length),
     avgWaitMinutes: waits.length ? waits.reduce((a, b) => a + b, 0) / waits.length : 0,
-    revenueByDoctor: byDoc.rows.map((r) => ({ key: r.key, amount: r.amount.toFixed(2) })),
-    revenueByDepartment: byDept.rows.map((r) => ({ key: r.key, amount: r.amount.toFixed(2) })),
+    revenueByDoctor: named(byDoc.rows),
+    revenueByDepartment: named(byDept.rows),
   };
 }
 

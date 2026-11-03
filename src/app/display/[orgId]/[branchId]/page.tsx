@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { publicBoard } from "@/modules/queue/service";
+import Image from "next/image";
 import { RefreshEvery } from "./RefreshEvery";
 
 export const metadata = { title: "Queue display" };
@@ -16,12 +17,12 @@ export default async function DisplayPage({ params, searchParams }: { params: Pr
   const now = rows.filter((r) => r.status === "called" || r.status === "in_consult");
   const waiting = rows.filter((r) => r.status === "waiting");
   return (
-    <main className="min-h-screen bg-[#0b1317] p-8 text-white">
+    <main className="side-grad min-h-screen p-8 text-white">
       <RefreshEvery seconds={5} />
-      <h1 className="mb-6 text-3xl font-semibold">Now serving</h1>
+      <div className="mb-8 flex items-center justify-between"><h1 className="text-4xl font-semibold tracking-tight">Now serving</h1><Image src="/brand/logo-header.png" alt="Elister Med" width={227} height={109} className="h-14 w-auto" priority /></div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {now.map((r) => (
-          <div key={r.number} className="rounded-2xl border border-teal-400/40 bg-teal-400/10 p-6"><div className="text-6xl font-bold tabular-nums">{r.number}</div><div className="mt-2 text-xl text-teal-200">{r.doctorLabel}</div></div>
+          <div key={r.number} className="rounded-3xl border border-cyan-300/30 bg-white/10 p-8 shadow-[0_20px_60px_-20px_rgba(0,0,0,.5)] backdrop-blur"><div className="text-6xl font-bold tabular-nums">{r.number}</div><div className="mt-2 text-xl text-teal-200">{r.doctorLabel}</div></div>
         ))}
         {now.length === 0 && <p className="text-xl text-white/60">—</p>}
       </div>

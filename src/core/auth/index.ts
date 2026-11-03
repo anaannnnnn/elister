@@ -14,7 +14,7 @@ function build() {
     secret: process.env.AUTH_SECRET,
     emailAndPassword: { enabled: true, minPasswordLength: 12, autoSignIn: true },
     session: { expiresIn: 60 * 60 * 8, updateAge: 60 * 15, cookieCache: { enabled: false } },
-    plugins: [twoFactor({ issuer: "UAE Healthcare OS" }), nextCookies()],
+    plugins: [twoFactor({ issuer: "Elister Med" }), nextCookies()],
   });
 }
 
