@@ -42,6 +42,15 @@ INDEXES.push(
   ["gl_lines", { orgId: 1, entryId: 1 }],
 );
 
+INDEXES.push(
+  ["invoices", { orgId: 1, number: 1 }, { unique: true }],
+  ["invoices", { orgId: 1, patientId: 1, createdAt: -1 }],
+  ["payments", { orgId: 1, idempotencyKey: 1 }, { unique: true }],
+  ["payments", { orgId: 1, invoiceId: 1 }],
+  ["refunds", { orgId: 1, idempotencyKey: 1 }, { unique: true }],
+  ["credit_notes", { orgId: 1, invoiceId: 1 }, { unique: true }],
+);
+
 export async function ensureIndexes(): Promise<void> {
   const db = await getDb();
   for (const [name, keys, opts] of INDEXES) await db.collection(name).createIndex(keys, opts);
