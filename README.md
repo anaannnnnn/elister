@@ -1,36 +1,49 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# UAE Healthcare OS
 
-## Getting Started
+A multi-tenant clinic / medical-centre platform for the UAE (AED, Asia/Dubai, English + Arabic with RTL). Next.js App Router, TypeScript strict, MongoDB, Better Auth.
 
-First, run the development server:
+**Read `docs/status.md` first**: it states exactly what is built and tested, and what is not. Phases 0–4 (the self-pay patient-to-payment journey with a balanced ledger) are done; most of the wider brief (insurance, pharmacy, lab, HR, hospital modules, integrations) is not.
+
+All data is synthetic. Nothing here claims regulatory certification or a live government integration.
+
+## Quick start (no database account needed)
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev:local      # in-memory MongoDB replica set + seeded demo org + Next.js on :3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Sign in at http://localhost:3000 with `admin@demo.local`, `reception@demo.local`, `dr.amina@demo.local`, `nurse@demo.local`, `accountant@demo.local`, `finance@demo.local`, `pharmacist@demo.local` or `auditor@demo.local`. Password (demo only): `Demo-Only-Pass-2026!`. Data is discarded when you stop it.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Against MongoDB Atlas
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Copy `.env.example` to `.env.local` and fill in `MONGODB_URI` (use a UAE region cluster), `MONGODB_DB`, `AUTH_SECRET` (random, 32+ chars) and `FIELD_ENCRYPTION_KEY` (`node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`). Also set `BETTER_AUTH_URL` to the app's public URL.
+2. Allow your IP in Atlas network access. Transactions need a replica set (all Atlas tiers have one).
+3. `npm run seed` then `npm run dev`.
 
-## Learn More
+## Scripts
 
-To learn more about Next.js, take a look at the following resources:
+| Command | What |
+|---|---|
+| `npm run dev` | Next.js dev server (needs `.env.local`) |
+| `npm run dev:local` | Self-contained dev environment (in-memory DB) |
+| `npm run seed` | Idempotent synthetic org, users, chart of accounts, periods, services |
+| `npm test` | Vitest (95 tests, in-memory replica set, never touches Atlas) |
+| `npm run test:e2e` | Playwright (Scenario A end to end, access control, RTL) |
+| `npm run typecheck`, `npm run lint`, `npm run build` | Static checks and production build |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Layout
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+src/core/      db (tenant layer), auth, rbac, audit, outbox/worker, money, time, crypto, locks
+src/modules/   org, patients, appointments, queue, emr, billing, ledger, reports, dashboard
+src/app/       routes, server actions, SSE and search endpoints
+src/ui/        design kit and application shell
+docs/          spec, plan, status, compliance gaps, integration readiness, security
+```
 
-## Deploy on Vercel
+Rule for modules: authorize → validate (Zod) → transact → audit → emit event. Modules call each other's service functions, not each other's collections.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Docs
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+`docs/superpowers/specs/…design.md` (decisions) · `docs/superpowers/plans/…` (build plan) · `docs/status.md` · `docs/compliance-gap-register.md` · `docs/integration-readiness.md` · `docs/security.md`

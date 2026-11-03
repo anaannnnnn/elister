@@ -3,7 +3,7 @@ import { requireCtx } from "@/lib/session";
 import { todayYmd } from "@/lib/range";
 import { dubaiParts, hhmmToMinutes } from "@/core/time";
 import { listAppointments, listDoctors } from "@/modules/appointments/service";
-import { getPatient, searchPatients } from "@/modules/patients/service";
+import { getPatient, patientNames } from "@/modules/patients/service";
 import { Alert, Badge, Button, Card, Field, Input, NoAccess, PageHeader, Select, Table } from "@/ui/kit";
 import { bookAction, cancelAction, checkInAction, noShowAction } from "./actions";
 import { DayGrid, type GridDoctor } from "./DayGrid";
@@ -20,12 +20,8 @@ export default async function AppointmentsPage({ searchParams }: { searchParams:
 
   const doctors = await listDoctors(ctx);
   const appts = await listAppointments(ctx, { from, to });
-  const ids = [...new Set(appts.map((a) => a.patientId))];
-  const names = new Map<string, string>();
-  for (const id of ids) {
-    try { names.set(id, (await getPatient(ctx, id)).fullName); } catch { names.set(id, "Patient"); }
-  }
-  void searchPatients;
+  const lookup = await patientNames(ctx, appts.map((a) => a.patientId));
+  const names = new Map([...lookup].map(([id, v]) => [id, v.fullName]));
   const pre = sp.patient ? await getPatient(ctx, sp.patient).catch(() => null) : null;
 
   const grid: GridDoctor[] = doctors.map((d) => ({
