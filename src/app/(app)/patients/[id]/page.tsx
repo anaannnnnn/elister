@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { requireCtx } from "@/lib/session";
+import { touchRecentPatient } from "@/modules/prefs/service";
+import { ActionForm } from "@/ui/forms";
+import { getDentalChart, listGrowth, listPackages, listPlans, vaccinationHistory, measurementTrend } from "@/modules/specialty/service";
 import { getPatient } from "@/modules/patients/service";
 import { listPatientAppointments } from "@/modules/appointments/service";
 import { listPatientEncounters } from "@/modules/emr/service";
@@ -7,7 +10,7 @@ import { listPatientInvoices } from "@/modules/billing/invoice";
 import { fromDecimal128 } from "@/core/money";
 import { Alert, Badge, Card, NoAccess, PageHeader, Table, aed, cn } from "@/ui/kit";
 
-const TABS = ["overview", "appointments", "encounters", "invoices", "timeline"] as const;
+const TABS = ["overview", "appointments", "encounters", "invoices", "timeline", "specialty"] as const;
 type Tab = (typeof TABS)[number];
 const fmt = (d: Date) => new Date(d).toLocaleString("en-GB", { timeZone: "Asia/Dubai", dateStyle: "medium", timeStyle: "short" });
 
@@ -18,6 +21,7 @@ export default async function PatientPage({ params, searchParams }: { params: Pr
   if (!ctx.permissions.includes("patients:view")) return <NoAccess what="patient records" />;
   const tab: Tab = (TABS as readonly string[]).includes(sp.tab ?? "") ? (sp.tab as Tab) : "overview";
   const p = await getPatient(ctx, id);
+  await touchRecentPatient(ctx, id);
   const can = (perm: string) => ctx.permissions.includes(perm as never);
 
   const appts = can("appointments:view") ? await listPatientAppointments(ctx, id) : [];
@@ -90,6 +94,7 @@ export default async function PatientPage({ params, searchParams }: { params: Pr
           {invs.map((i) => <tr key={i._id}><td><Link className="text-primary hover:underline" href={`/billing/invoices/${i._id}`}>{i.number}</Link></td><td>{fmt(i.createdAt)}</td><td>{aed(fromDecimal128(i.total).toFixed(2))}</td><td>{aed(fromDecimal128(i.balance).toFixed(2))}</td><td><Badge tone={i.status === "paid" ? "ok" : i.status === "credited" ? "neutral" : "warn"}>{i.status.replace("_", " ")}</Badge></td></tr>)}
         </Table></Card>
       )}
+      {tab === "specialty" && <Specialty ctx={ctx} id={id} back={`/patients/${id}?tab=specialty`} />}
       {tab === "timeline" && (
         <Card>
           {events.length === 0 ? <p className="text-sm text-muted">No events yet.</p> : (
@@ -105,6 +110,35 @@ export default async function PatientPage({ params, searchParams }: { params: Pr
           )}
         </Card>
       )}
+    </div>
+  );
+}
+
+async function Specialty({ ctx, id, back }: { ctx: Awaited<ReturnType<typeof requireCtx>>; id: string; back: string }) {
+  if (!ctx.permissions.includes("emr:view")) return <Card><p className="text-sm text-muted">Clinical specialty records are not available to your role.</p></Card>;
+  const can = (p: string) => ctx.permissions.includes(p as never);
+  const [chart, plans, growth, vacc, pkgs, hba1c] = await Promise.all([getDentalChart(ctx, id), listPlans(ctx, id), listGrowth(ctx, id), vaccinationHistory(ctx, id), listPackages(ctx, id), measurementTrend(ctx, id, "hba1c")]);
+  return (
+    <div className="grid gap-4 lg:grid-cols-2">
+      <Card title="Dental chart (FDI)">
+        <Table head={["Tooth", "Surface", "Condition", "Recorded"]} empty="Nothing charted.">{chart.entries.map((e) => <tr key={e._id}><td>{e.tooth}</td><td>{e.surface ?? "—"}</td><td>{e.condition}</td><td className="text-xs">{fmt(e.at)}</td></tr>)}</Table>
+        {can("emr:update") && <div className="mt-3 border-t border-border pt-3"><ActionForm action="spec.tooth" back={back} hidden={{ patientId: id }} submit="Chart" fields={[{ name: "tooth", label: "Tooth (FDI)", type: "number", required: true }, { name: "surface", label: "Surface (M O D B L I)" }, { name: "condition", label: "Condition", required: true }]} /></div>}
+        {plans.map((pl) => <p key={pl._id} className="mt-2 text-xs text-muted">Plan {pl.status}: {pl.items.map((i) => `${i.tooth} ${i.serviceName} (${i.status})`).join("; ")}</p>)}
+      </Card>
+      <Card title="Growth and vaccination">
+        <Table head={["Date", "Weight kg", "Height cm", "BMI"]} empty="No growth records.">{growth.map((g) => <tr key={g._id}><td>{g.date}</td><td>{g.weightKg}</td><td>{g.heightCm}</td><td>{g.bmi}</td></tr>)}</Table>
+        <Table head={["Vaccine", "Dose", "Date"]} empty="No vaccinations recorded.">{vacc.map((v) => <tr key={v._id}><td>{v.vaccine}</td><td>{v.dose}</td><td>{v.date}</td></tr>)}</Table>
+        {can("emr:update") && <div className="mt-3 grid gap-3 border-t border-border pt-3"><ActionForm action="spec.growth" back={back} hidden={{ patientId: id }} submit="Add growth record" variant="outline" fields={[{ name: "date", label: "Date", type: "date", required: true }, { name: "weight", label: "Weight kg", type: "number", step: "0.1", required: true }, { name: "height", label: "Height cm", type: "number", step: "0.1", required: true }, { name: "head", label: "Head cm", type: "number", step: "0.1" }]} /><ActionForm action="spec.vaccine" back={back} hidden={{ patientId: id }} submit="Add vaccination" variant="outline" fields={[{ name: "vaccine", label: "Vaccine", required: true }, { name: "dose", label: "Dose #", type: "number", required: true }, { name: "date", label: "Date", type: "date", required: true }, { name: "batch", label: "Batch" }]} /></div>}
+        <p className="mt-2 text-xs text-muted">Percentiles are not calculated: adopt and configure a validated reference before using growth charts clinically.</p>
+      </Card>
+      <Card title="Session packages">
+        <Table head={["Package", "Used", ""]} empty="No packages.">{pkgs.map((k) => <tr key={k._id}><td>{k.name}</td><td>{k.used} / {k.sessions}</td><td>{k.status === "active" && can("emr:update") && <ActionForm inline action="spec.consume" back={back} hidden={{ id: k._id }} submit="Use a session" variant="outline" fields={[]} />}</td></tr>)}</Table>
+        {can("billing:create") && <div className="mt-3 border-t border-border pt-3"><ActionForm action="spec.package" back={back} hidden={{ patientId: id }} submit="Sell package" variant="outline" fields={[{ name: "name", label: "Package", required: true }, { name: "sessions", label: "Sessions", type: "number", required: true }, { name: "price", label: "Price AED", required: true }]} /></div>}
+      </Card>
+      <Card title="Chronic care and measurements">
+        <p className="text-sm">HbA1c trend: {hba1c.points.length ? `${hba1c.points.map((p) => p.value).join(" → ")} (${hba1c.direction})` : "no readings"}</p>
+        {can("emr:update") && <div className="mt-3 grid gap-3 border-t border-border pt-3"><ActionForm action="spec.measure" back={back} hidden={{ patientId: id }} submit="Record measurement" variant="outline" fields={[{ name: "kind", label: "Measure", required: true, placeholder: "hba1c, pain_score…" }, { name: "value", label: "Value", type: "number", step: "any", required: true }, { name: "unit", label: "Unit", required: true }]} /><ActionForm action="spec.carePlan" back={back} hidden={{ patientId: id }} submit="Set care plan" variant="outline" fields={[{ name: "condition", label: "Condition", required: true }, { name: "interval", label: "Review every (days)", type: "number", required: true, defaultValue: 90 }, { name: "kinds", label: "Measurements (comma separated)", required: true }]} /></div>}
+      </Card>
     </div>
   );
 }

@@ -18,6 +18,11 @@ const eslintConfig = defineConfig([
     rules: { "@typescript-eslint/no-explicit-any": "off" },
   },
   {
+    // Server components render once per request, so reading the clock there is correct (the purity rule targets client re-renders).
+    files: ["src/app/**/*.{ts,tsx}", "src/ui/**/*.{ts,tsx}"],
+    rules: { "react-hooks/purity": "off" },
+  },
+  {
     ignores: ["**/*.test.ts"],
     files: ["src/modules/**/*.{ts,tsx}", "src/app/**/*.{ts,tsx}", "src/ui/**/*.{ts,tsx}"],
     rules: {

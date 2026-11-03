@@ -2,7 +2,7 @@
 
 A multi-tenant clinic / medical-centre platform for the UAE (AED, Asia/Dubai, English + Arabic with RTL). Next.js App Router, TypeScript strict, MongoDB, Better Auth.
 
-**Read `docs/status.md` first**: it states exactly what is built and tested, and what is not. Phases 0–4 (the self-pay patient-to-payment journey with a balanced ledger) are done; most of the wider brief (insurance, pharmacy, lab, HR, hospital modules, integrations) is not.
+**Read `docs/status.md` first**: it states exactly what is built and tested, and what is not. All modules in the brief have working domain logic, tests and UI (patients through hospital extensions). External integrations are sandbox-only.
 
 All data is synthetic. Nothing here claims regulatory certification or a live government integration.
 
@@ -13,7 +13,7 @@ npm install
 npm run dev:local      # in-memory MongoDB replica set + seeded demo org + Next.js on :3000
 ```
 
-Sign in at http://localhost:3000 with `admin@demo.local`, `reception@demo.local`, `dr.amina@demo.local`, `nurse@demo.local`, `accountant@demo.local`, `finance@demo.local`, `pharmacist@demo.local` or `auditor@demo.local`. Password (demo only): `Demo-Only-Pass-2026!`. Data is discarded when you stop it.
+Sign in at http://localhost:3000 with `admin@demo.local`, `reception@demo.local`, `dr.amina@demo.local`, `nurse@demo.local`, `accountant@demo.local`, `finance@demo.local`, `pharmacist@demo.local`, `lab1@demo.local`, `insurance@demo.local`, `inventory@demo.local`, `hr@demo.local`, `director@demo.local`, `auditor@demo.local` or `patient@demo.local` (portal). Password (demo only): `Demo-Only-Pass-2026!`. Data is discarded when you stop it.
 
 ## Against MongoDB Atlas
 
@@ -28,15 +28,17 @@ Sign in at http://localhost:3000 with `admin@demo.local`, `reception@demo.local`
 | `npm run dev` | Next.js dev server (needs `.env.local`) |
 | `npm run dev:local` | Self-contained dev environment (in-memory DB) |
 | `npm run seed` | Idempotent synthetic org, users, chart of accounts, periods, services |
-| `npm test` | Vitest (95 tests, in-memory replica set, never touches Atlas) |
-| `npm run test:e2e` | Playwright (Scenario A end to end, access control, RTL) |
+| `npm test` | Vitest (209 tests, in-memory replica set, never touches Atlas) |
+| `npm run test:e2e` | Playwright (Scenario A and E, access control, RTL, smoke of every module page, portal) |
 | `npm run typecheck`, `npm run lint`, `npm run build` | Static checks and production build |
 
 ## Layout
 
 ```
 src/core/      db (tenant layer), auth, rbac, audit, outbox/worker, money, time, crypto, locks
-src/modules/   org, patients, appointments, queue, emr, billing, ledger, reports, dashboard
+src/modules/   org, patients, appointments, queue, emr, billing, ledger, finance, reports, dashboard, insurance,
+               pharmacy, inventory, procurement, laboratory, radiology, hr, crm, communications, compliance,
+               integrations, specialty, hospital, ai, portal, prefs
 src/app/       routes, server actions, SSE and search endpoints
 src/ui/        design kit and application shell
 docs/          spec, plan, status, compliance gaps, integration readiness, security

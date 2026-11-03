@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { getAuth } from "@/core/auth";
 import { tenantCol } from "@/core/db";
+import { unreadCount } from "@/core/notify";
 import { dirOf, t } from "@/i18n";
 import { getLocale, requireCtx } from "@/lib/session";
 import { NAV } from "@/ui/shell/nav";
@@ -26,7 +27,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const locale = await getLocale();
   const org = await tenantCol<{ name: string }>(ctx.orgId, "orgs").findOne({ _id: ctx.orgId } as never);
   const branch = await tenantCol<{ name: string }>(ctx.orgId, "branches").findOne({ _id: ctx.branchId } as never);
-  const items = NAV.filter((n) => ctx.permissions.includes(n.perm)).map((n) => ({ href: n.href, label: t(locale, n.labelKey), icon: n.icon }));
+  const unread = await unreadCount(ctx);
+  const isPortal = ctx.roles.includes("patient_portal_user");
+  const items = isPortal
+    ? [{ href: "/portal", label: t(locale, "nav.portal"), icon: "heart" as const }]
+    : NAV.filter((n) => !n.portal && ctx.permissions.includes(n.perm)).map((n) => ({ href: n.href, label: t(locale, n.labelKey), icon: n.icon }));
   const quick = [
     ctx.permissions.includes("patients:create") && { href: "/patients/new", label: t(locale, "patients.new") },
     ctx.permissions.includes("appointments:create") && { href: "/appointments", label: "Book appointment" },
@@ -37,7 +42,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       items={items} quick={quick} orgName={org?.name ?? "Organization"} branch={branch?.name ?? ""} userName={ctx.name}
       roles={ctx.roles.join(", ").replaceAll("_", " ")} locale={locale} dir={dirOf(locale)}
       labels={{ language: t(locale, "common.language"), signOut: t(locale, "common.signOut"), search: t(locale, "common.search") }}
-      setLocale={setLocale} signOut={signOut}
+      setLocale={setLocale} signOut={signOut} unread={unread}
     >
       <Suspense fallback={<div className="space-y-3"><Skeleton className="h-7 w-56" /><Skeleton className="h-32 w-full" /></div>}>{children}</Suspense>
     </Shell>

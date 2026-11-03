@@ -1,4 +1,8 @@
+import { redirect } from "next/navigation";
+import Link from "next/link";
 import { requireCtx } from "@/lib/session";
+import { getPrefs, recentPatients, ALL_WIDGETS } from "@/modules/prefs/service";
+import { dispatch } from "../dispatch";
 import { parseRange } from "@/lib/range";
 import { executiveDashboard } from "@/modules/dashboard/executive";
 import { receptionDashboard } from "@/modules/dashboard/reception";
@@ -12,14 +16,18 @@ const pct = (v: number | null) => (v === null ? "—" : `${v >= 0 ? "+" : ""}${v
 
 export default async function DashboardPage({ searchParams }: { searchParams: SP }) {
   const ctx = await requireCtx();
+  if (ctx.roles.includes("patient_portal_user")) redirect("/portal");
   const sp = await searchParams;
+  const prefs = await getPrefs(ctx);
+  const recent = await recentPatients(ctx);
+  const show = (w: string) => prefs.widgets.includes(w);
   const { from, to, fromStr, toStr } = parseRange(sp);
   const can = (p: string) => ctx.permissions.includes(p as never);
 
-  const exec = can("reports:view") ? await executiveDashboard(ctx, { from, to }) : null;
-  const reception = can("appointments:view") && can("queue:view") ? await receptionDashboard(ctx, { day: new Date() }) : null;
-  const doctor = ctx.roles.includes("doctor") ? await doctorDashboard(ctx, { day: new Date() }).catch(() => null) : null;
-  const accounts = can("ledger:view") ? await accountsDashboard(ctx, { day: new Date() }) : null;
+  const exec = can("reports:view") && show("executive") ? await executiveDashboard(ctx, { from, to }) : null;
+  const reception = can("appointments:view") && can("queue:view") && show("reception") ? await receptionDashboard(ctx, { day: new Date() }) : null;
+  const doctor = ctx.roles.includes("doctor") && show("doctor") ? await doctorDashboard(ctx, { day: new Date() }).catch(() => null) : null;
+  const accounts = can("ledger:view") && show("accounts") ? await accountsDashboard(ctx, { day: new Date() }) : null;
 
   return (
     <div className="space-y-5">
@@ -90,6 +98,13 @@ export default async function DashboardPage({ searchParams }: { searchParams: SP
           </div>
         </section>
       )}
+
+      {recent.length > 0 && <Card title="Recently opened patients"><ul className="flex flex-wrap gap-2">{recent.map((r) => <li key={r.id}><Link className="rounded-ui border border-border px-3 py-1.5 text-sm hover:bg-surface-2" href={`/patients/${r.id}`}>{r.fullName} <span className="font-mono text-xs text-muted">{r.mrn}</span></Link></li>)}</ul></Card>}
+
+      <details className="rounded-ui border border-border bg-surface p-3 text-sm"><summary className="cursor-pointer font-medium">Customise my dashboard</summary>
+        <form action={dispatch} className="mt-3 flex flex-wrap items-center gap-3"><input type="hidden" name="_a" value="prefs.widgets" /><input type="hidden" name="_back" value="/dashboard" />
+          {ALL_WIDGETS.map((w) => <label key={w} className="flex items-center gap-1.5 capitalize"><input type="checkbox" name="widget" value={w} defaultChecked={show(w)} /> {w}</label>)}<Button variant="outline">Save</Button></form>
+        <p className="mt-2 text-xs text-muted">Only widgets your role may see are ever shown; this hides the ones you do not want.</p></details>
 
       {!exec && !reception && !doctor && !accounts && <Card><p className="text-sm text-muted">No dashboard widgets are available for your role.</p></Card>}
     </div>

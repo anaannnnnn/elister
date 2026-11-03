@@ -1,54 +1,64 @@
 # Implementation and feature status
 
-Last verified: 2026-11-03 (95 unit/integration tests, 3 Playwright e2e tests, `tsc`, `eslint`, `next build` all green).
+Last verified: 2026-11-03. 209 unit/integration tests, 8 browser tests (Scenario A, Scenario E, access control, RTL, smoke over every module page, portal), `tsc`, `eslint` (0 errors) and `next build` all pass.
 
-This file separates what is **built and tested** from what is **not built**. Nothing here claims regulatory certification or a live government integration.
+Nothing here claims regulatory certification or a live government/payer integration. Every external boundary is a labelled **sandbox** adapter that transmits nothing.
 
-## 1. Implemented and tested
+## 1. Implemented and tested (domain logic + UI)
 
 | Area | What exists | Evidence |
 |---|---|---|
-| Tenant isolation | Every document carries `orgId`; all module data access goes through `tenantCol()`; a lint rule bans raw db access in modules/app/ui | `core/db/tenant.test.ts`, per-module org-isolation tests |
-| Auth | Better Auth email+password, server-side sessions, optional TOTP MFA (login challenge + enrolment page) | e2e login, manual MFA path untested end to end |
-| RBAC | 18 roles, `resource:action` permissions, server-side `assertPermission` in every service function and page gate | `rbac/authorize.test.ts`, e2e access test |
-| Audit | Append-only audit rows written in the same transaction as the change; no update/delete API; every clinical read audited | `audit.test.ts`, emr/patients tests |
-| Outbox | Transactional events, atomic claim, retry with backoff, dead-letter | `audit.test.ts` |
-| Patients | Atomic MRN (20 parallel creates → 20 sequential), Emirates ID encrypted (AES-256-GCM) + blind index, masked on read, duplicate hints, Arabic search | `patients/service.test.ts` |
-| Appointments | Race-free booking (10 parallel → 1 winner; partial overlaps too), working hours, leave/holidays, state machine, reschedule, drag-and-drop UI | `appointments/service.test.ts`, e2e |
-| Queue | Daily per-branch tokens, priority, wait estimate from real consult durations, org-scoped SSE, public display with no patient fields | `queue/service.test.ts` |
-| EMR | Encounter workspace, vitals, diagnoses (ICD code entry), SOAP notes, sign / amend with versioning (v1 preserved), allergy alerts, audited reads | `emr/service.test.ts`, e2e |
-| Charges | Price and tax snapshot, idempotent consultation charge on encounter completion | `billing/charges.test.ts` |
-| Ledger | Balanced double-entry journal, idempotency keys (also under parallel retries), period locks, reversals, trial balance; posted entries are never updated | `ledger/journal.test.ts` |
-| Billing | Invoices with per-line VAT, payments (split, advance on overpayment), refunds, credit notes, receipts | `billing/invoice.test.ts`, e2e |
-| Reconciliation | Random invoice/payment/refund/credit-note sequences: AR sub-ledger equals GL balance, trial balance balances | `ledger/reconcile.test.ts` |
-| Reports | P&L, revenue by doctor/department (reconciles to P&L), AR aging, executive/reception/doctor/accounts dashboards with previous-period comparison, zero-safe | `reports/reports.test.ts` |
-| Shell | Collapsible sidebar, role-filtered nav, command palette (Ctrl+K), breadcrumbs, dark mode, EN/AR with RTL, mobile nav | e2e (RTL) |
+| Platform | Tenant isolation (`orgId` everywhere, lint-banned raw db), Better Auth + optional TOTP, 18 roles / `resource:action` RBAC enforced in services and page gates, append-only audit, transactional outbox, notifications, attachments (typed, size-capped, audited) | core tests, e2e access tests |
+| Patients / CRM | Registration (3-step), encrypted Emirates ID, duplicate hints, Arabic search; enquiries, follow-ups, consent-aware recall (contact data only), feedback/NPS, complaints, referral analysis | patients, crm tests |
+| Appointments / queue | Race-free booking, hours/leave/holidays, state machine, drag-and-drop reschedule, tokens, wait estimate, org-scoped SSE, public display, QR kiosk | appointments, queue, portal tests |
+| EMR | Encounter workspace, SOAP sign/amend versioning, allergy alerts, diagnoses, vitals, specialty template framework (versioned forms) | emr, specialty tests |
+| Specialties | Dental FDI chart + multi-visit plans, packages, physio, paediatric growth/vaccination, chronic care plans, dermatology with photo consent and product use | specialty tests |
+| Billing | Charges, invoices with per-line VAT, payments (split/advance), refunds, credit notes, receipts, insured split (patient/payer) | billing tests, e2e |
+| Ledger / finance | Double-entry with idempotency, period locks, reversals, journal approval, year-end close, cash drawers, petty cash, transfers, bank import + reconciliation, card settlement, balance sheet, cash flow, VAT summary, budgets, branch profitability, pharmacy margin | ledger, finance tests |
+| Insurance | Payers/plans/policies, eligibility records, pre-authorisation, claim validation, sandbox submission, rejection/resubmission, remittance, write-off, receivable reconciliation, denial analysis | insurance tests |
+| Pharmacy / inventory | Prescriptions with allergy + duplicate alerts, pharmacist verification, FEFO dispensing, COGS + charge, returns, refills, batch stock with no negatives, valuation = ledger | pharmacy, procurement tests |
+| Procurement / AP | Reorder → request → approval (four-eyes) → PO → GRN → supplier invoice with variance → payment, AP aging | procurement tests, e2e |
+| Laboratory / radiology | Catalogue with approved ranges only, sample stages, four-eyes verification, critical alerts, release gating, billing; imaging order → report → second-reader release | laboratory tests |
+| HR | Employees, licence/document expiry, attendance/overtime, configurable leave, advances, payroll (four-eyes, ledger posting), generic bank CSV, configured gratuity | hr tests |
+| Communications | Templates with safety rules, consent/opt-out, delivery log, retries/dead-letter, reminders (sandbox gateway) | crm tests |
+| Compliance | Licences, checklist with evidence, incidents, policies, access review, audit report, integration readiness matrix | integrations tests |
+| Integrations | HL7 v2 ADT and FHIR Patient builders, validation, identity matching, code maps, queue with error queue (sandbox); structured e-invoice with validation and sandbox ASP | integrations tests |
+| Hospital (optional, off by default) | Wards/beds, admissions, MAR, discharge billing, ER queue with escalation, theatre scheduling with safety gates | hospital tests |
+| AI assistants | Local rule-based only: facility Q&A (EN/AR), slot search, booking via caller permissions, revenue summary, forecasts, anomaly detection, SOAP draft-from-dictation (draft only) | platform tests |
+| Portal | One-patient-bound portal: appointments, invoices, released results, intake, queue status | platform + smoke tests |
+| Groups | Consolidated P&L only for members that agreed | platform tests |
+| Shell | Role-filtered sidebar, command palette, notification bell, dark mode, EN/AR + RTL, saved dashboard widgets, recent patients | e2e |
 
-## 2. Implemented but not externally validated
+## 2. Implemented, not externally validated
 
-- VAT: invoices apply a configured rate (default **5% standard-rated with a "review required" flag on every service**). No service is assumed zero-rated. A UAE tax professional must classify each service before real use.
-- Encryption key handling: a single env key; no KMS, no rotation tooling.
-- SSE uses an in-process bus: correct for one server instance only. A multi-instance deployment needs a shared transport (Mongo change streams or Redis pub/sub).
-- Queue wait estimate is a simple average of recent consults; it has not been tuned on real data.
+- VAT defaults to 5% standard-rated with a "review required" flag on every service. Nothing is assumed zero-rated.
+- Structured e-invoice uses an internal model (`internal-0.1`), not the national PINT-AE/ASP payload.
+- Payroll bank file is a generic CSV, not the official WPS SIF layout. Gratuity, overtime, leave entitlements and escalation thresholds are **configuration with no defaults**.
+- Field encryption uses one environment key (no KMS or rotation tooling).
+- Realtime uses an in-process bus (single instance).
+- Assistants use transparent heuristics (no-show risk, demand forecast) that are labelled unvalidated.
 
-## 3. Not built yet (scoped out of phases 0–4; the original brief is far larger)
+## 3. Sandbox integrations (nothing leaves the system)
 
-Insurance (eligibility, pre-auth, claims, remittance), pharmacy and prescriptions, laboratory and radiology, inventory/procurement/accounts payable, HR and payroll, CRM campaigns and surveys, specialty modules (dental chart, physio, derm, paeds), patient portal and kiosk, communications centre (email/SMS/WhatsApp), AI assistants, hospital modules (inpatient, ER, theatre), bank reconciliation and statement import, cash registers, UAE e-invoicing (structured), financial statements beyond P&L (balance sheet, cash flow), multi-branch consolidated reporting, saved views and configurable widgets, notification centre, FullCalendar-style month/week/resource views.
-
-Sandbox adapters for DHA eClaimLink, Shafafiya, Riayati, NABIDH and Malaffi are **not** present. See `integration-readiness.md`.
+Claims submission, SMS/email/WhatsApp gateway, HIE messaging (NABIDH/Malaffi/Riayati shape), e-invoice service provider, AI provider (local rules). Readiness matrix shows none beyond "adapter implemented".
 
 ## 4. Awaiting credentials, licences or regulator approval
 
-Everything in `integration-readiness.md` beyond "Not configured": coding catalogues (CPT is licensed), regulator specifications and onboarding, HIE credentials, e-invoicing Accredited Service Provider, SMS/WhatsApp gateways, drug-knowledge provider.
+DHA eClaimLink, DOH Shafafiya, Riayati, NABIDH, Malaffi onboarding and conformance; e-invoicing ASP contract and national format mapping; payment gateway; SMS/WhatsApp accounts; licensed drug-knowledge provider; CPT/HCPCS and UAE drug code licences (diagnosis and service codes are entered manually); PACS/DICOM.
 
 ## 5. Requires clinical or regulatory review before real use
 
-Triage rules (none implemented), reference ranges (none implemented), drug-interaction checking (none implemented, deliberately), tax classification, retention periods, consent wording in the registration form, break-glass policy (not implemented).
+Triage scale use and ER escalation thresholds, laboratory reference ranges, tax classification, consent wording, retention periods, controlled-medicine process (blocked electronically by design), break-glass policy (not built).
 
-## 6. Known limitations in what exists
+## 6. Not built / known limitations
 
-- The reference dashboard (shadcnuikit.com hospital-management) was **not** inspected; the UI is an original design built from the brief. `docs/design/reference-notes.md` says so.
-- UI kit is hand-built Tailwind, not shadcn/Radix; charts are CSS bars; the scheduler is a custom day grid. Accessibility has had keyboard/label care but no audit.
-- Dashboards fetch appointment rows into memory for the selected range (capped at 100k): fine for a clinic, needs aggregation pipelines at scale.
-- Database is MongoDB (agreed in the design spec), not the PostgreSQL/Prisma named in the original brief.
-- Tests run on an in-memory MongoDB replica set. Nothing has been run against Atlas yet because no connection string was available in this workspace.
+- Controlled-medicine electronic prescribing is refused (needs the regulator's authorization integration).
+- No drug-interaction checking (no licensed source); allergy matching is by name only, not drug class.
+- Break-glass access, patient-rights request workflows, backup/restore automation, incident monitoring stack, hash-chained audit.
+- Online card payment from the portal (no gateway). Payment links are not implemented.
+- Month/week/resource calendar views (day scheduler with drag-and-drop only); FullCalendar not used.
+- UI kit is hand-built Tailwind (not shadcn/Radix), charts are CSS bars; accessibility had care but no formal audit.
+- The reference dashboard (shadcnuikit hospital-management) was not inspected.
+- Dashboards load rows into memory for the selected range; aggregation pipelines needed at larger scale.
+- Database is MongoDB (agreed in the design spec), not the PostgreSQL/Prisma/Redis in the original brief.
+- Tests and local runs use an in-memory replica set. Nothing has been run against Atlas because no connection string was available in this workspace.

@@ -2,18 +2,18 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Activity, BookOpen, CalendarDays, Command, LayoutDashboard, ListOrdered, Moon, PanelLeftClose, PanelLeftOpen, Receipt, ShieldCheck, Sun, Users } from "lucide-react";
+import { Activity, Bell, BedDouble, BookOpen, Bot, CalendarDays, Command, FlaskConical, Heart, Landmark, LayoutDashboard, ListOrdered, MessageSquare, Moon, PanelLeftClose, PanelLeftOpen, Pill, Receipt, ShieldCheck, ClipboardCheck, Sun, UserCog, Users, Package } from "lucide-react";
 import { cn } from "@/ui/kit";
 
-const ICONS = { dash: LayoutDashboard, users: Users, cal: CalendarDays, queue: ListOrdered, bill: Receipt, book: BookOpen, shield: ShieldCheck } as const;
+const ICONS = { dash: LayoutDashboard, users: Users, cal: CalendarDays, queue: ListOrdered, bill: Receipt, book: BookOpen, shield: ShieldCheck, med: Pill, flask: FlaskConical, box: Package, people: UserCog, heart: Heart, chat: MessageSquare, check: ClipboardCheck, bank: Landmark, bed: BedDouble, bot: Bot } as const;
 type Item = { href: string; label: string; icon: keyof typeof ICONS };
 
 export function Shell({
-  items, quick, orgName, branch, userName, roles, locale, dir, labels, setLocale, signOut, children,
+  items, quick, orgName, branch, userName, roles, locale, dir, labels, setLocale, signOut, unread, children,
 }: {
   items: Item[]; quick: { href: string; label: string }[]; orgName: string; branch: string; userName: string; roles: string;
   locale: string; dir: "ltr" | "rtl"; labels: { language: string; signOut: string; search: string };
-  setLocale: () => Promise<void>; signOut: () => Promise<void>; children: ReactNode;
+  setLocale: () => Promise<void>; signOut: () => Promise<void>; unread: number; children: ReactNode;
 }) {
   const path = usePathname();
   const [collapsed, setCollapsed] = useState(false);
@@ -84,6 +84,7 @@ export function Shell({
             <button onClick={() => setOpen(true)} className="flex items-center gap-2 rounded-ui border border-border px-3 py-1.5 text-xs text-muted hover:bg-surface-2" aria-label="Open command palette">
               <Command size={14} /> {labels.search} <kbd className="rounded border border-border px-1">Ctrl K</kbd>
             </button>
+            <Link href="/notifications" aria-label={`Notifications${unread ? ` (${unread} unread)` : ""}`} className="relative rounded-ui p-2 hover:bg-surface-2"><Bell size={16} />{unread > 0 && <span className="absolute -end-0.5 -top-0.5 grid min-w-4 place-items-center rounded-full bg-danger px-1 text-[10px] font-semibold text-white">{unread > 9 ? "9+" : unread}</span>}</Link>
             <form action={setLocale}><button className="rounded-ui px-2.5 py-1.5 text-xs hover:bg-surface-2" aria-label="Switch language">{labels.language}</button></form>
             <button onClick={toggleTheme} aria-label="Toggle theme" className="rounded-ui p-2 hover:bg-surface-2">{dark ? <Sun size={16} /> : <Moon size={16} />}</button>
             <div className="hidden text-end text-xs leading-tight sm:block"><div className="font-medium">{userName}</div><div className="text-muted">{roles}</div></div>

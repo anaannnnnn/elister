@@ -103,3 +103,14 @@ export function NoAccess({ what = "this page" }: { what?: string }) {
     </div>
   );
 }
+
+export function Tabs({ tabs, active, base = "" }: { tabs: { key: string; label: string }[]; active: string; base?: string }) {
+  return (
+    <nav className="flex flex-wrap gap-1 border-b border-border" aria-label="Sections">
+      {tabs.map((t) => (
+        <a key={t.key} href={`${base}?tab=${t.key}`} aria-current={t.key === active ? "page" : undefined}
+          className={cn("-mb-px border-b-2 px-3 py-2 text-sm", t.key === active ? "border-primary font-medium text-primary" : "border-transparent text-muted hover:text-fg")}>{t.label}</a>
+      ))}
+    </nav>
+  );
+}
