@@ -13,6 +13,19 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  {
+    files: ["src/modules/**/*.{ts,tsx}", "src/app/**/*.{ts,tsx}", "src/ui/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": ["error", {
+        paths: [{ name: "mongodb", importNames: ["MongoClient"], message: "Use tenantCol() from @/core/db." }],
+        patterns: [{ group: ["**/core/db/client"], message: "Raw db access is banned outside src/core. Use tenantCol()/withTransaction()." }],
+      }],
+      "no-restricted-syntax": ["error", {
+        selector: "ImportSpecifier[imported.name=/^(getDb|getClient)$/]",
+        message: "Raw collection access is banned outside src/core. Use tenantCol().",
+      }],
+    },
+  },
 ]);
 
 export default eslintConfig;
