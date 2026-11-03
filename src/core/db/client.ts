@@ -46,3 +46,12 @@ export async function withTransaction<T>(fn: (s: ClientSession) => Promise<T>): 
     await session.endSession();
   }
 }
+
+/** Sync Db handle (driver connects lazily). For adapters that need a Db at construction. */
+export function getDbLazy(): Db {
+  const { uri, db } = config();
+  type L = { __mongoLazy?: MongoClient };
+  const gl = globalThis as unknown as L;
+  gl.__mongoLazy ??= new MongoClient(uri, { maxPoolSize: 10 });
+  return gl.__mongoLazy.db(db);
+}
