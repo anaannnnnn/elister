@@ -17,6 +17,12 @@ INDEXES.push(
   ["time_off", { orgId: 1, doctorId: 1, start: 1 }],
 );
 
+INDEXES.push(
+  ["queue_tokens", { orgId: 1, branchId: 1, day: 1, number: 1 }, { unique: true }],
+  ["queue_tokens", { orgId: 1, doctorId: 1, status: 1, priority: -1, number: 1 }],
+  ["queue_tokens", { orgId: 1, appointmentId: 1 }],
+);
+
 export async function ensureIndexes(): Promise<void> {
   const db = await getDb();
   for (const [name, keys, opts] of INDEXES) await db.collection(name).createIndex(keys, opts);

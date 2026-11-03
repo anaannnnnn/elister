@@ -11,6 +11,7 @@ export interface TenantCollection<T extends Document> {
   findOne(filter: Filter<T>, s?: ClientSession): Promise<WithOrg<T> | null>;
   insertOne(doc: T, s?: ClientSession): Promise<void>;
   updateOne(filter: Filter<T>, update: UpdateFilter<T>, s?: ClientSession, opts?: { upsert?: boolean }): Promise<UpdateResult>;
+  findOneAndUpdate(filter: Filter<T>, update: UpdateFilter<T>, opts?: { sort?: Sort }, s?: ClientSession): Promise<WithOrg<T> | null>;
   count(filter: Filter<T>, s?: ClientSession): Promise<number>;
   aggregate<R extends Document = Document>(pipeline: Document[], s?: ClientSession): Promise<R[]>;
 }
@@ -34,6 +35,11 @@ export function tenantCol<T extends Document = Document>(orgId: string, name: st
       const u = update as any;
       for (const op of ["$set", "$setOnInsert", "$unset"]) if (u[op] && "orgId" in u[op]) delete u[op].orgId;
       return (await col()).updateOne(scope(filter), u, { session: s, upsert: opts?.upsert });
+    },
+    async findOneAndUpdate(filter, update, opts, s) {
+      return (await (await col()).findOneAndUpdate(scope(filter), update as any, {
+        sort: opts?.sort, session: s, returnDocument: "after",
+      })) as WithOrg<T> | null;
     },
     async count(filter, s) {
       return (await col()).countDocuments(scope(filter), { session: s });
