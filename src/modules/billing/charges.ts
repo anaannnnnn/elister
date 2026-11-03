@@ -117,3 +117,9 @@ export async function listEncounterCharges(ctx: Ctx, encounterId: string): Promi
   if (!ctx.permissions.includes("billing:view") && !ctx.permissions.includes("emr:view")) throw new AppError("FORBIDDEN", "Missing permission billing:view");
   return charges(ctx.orgId).find({ encounterId } as never, { sort: { createdAt: 1 } });
 }
+
+/** Minimal charge lookup for modules that must trace charges back to encounters (e.g. claim coding). */
+export async function getChargesByIds(ctx: Ctx, ids: string[]): Promise<Charge[]> {
+  if (!ctx.permissions.includes("billing:view") && !ctx.permissions.includes("insurance:view")) throw new AppError("FORBIDDEN", "Missing permission billing:view");
+  return charges(ctx.orgId).find({ _id: { $in: ids } } as never);
+}

@@ -38,7 +38,10 @@ async function postingLines(orgId: string, lines: InvoiceLine[], branchId: strin
 const asCredit = (ls: LineInput[]): LineInput[] => (ls as (LineInput & { _amount: Decimal })[]).map(({ _amount, ...l }) => ({ ...l, credit: _amount.toFixed(2) }));
 const asDebit = (ls: LineInput[]): LineInput[] => (ls as (LineInput & { _amount: Decimal })[]).map(({ _amount, ...l }) => ({ ...l, debit: _amount.toFixed(2) }));
 
-export async function finalizeInvoice(ctx: Ctx, input: { patientId: string; chargeIds: string[] }): Promise<Invoice> {
+/** Insurance split: the insurance module supplies the payer portion for the finalized lines. */
+export type PayerSplit = { policyId: string; payerId: string; compute: (lines: InvoiceLine[], total: Decimal) => Decimal };
+
+export async function finalizeInvoice(ctx: Ctx, input: { patientId: string; chargeIds: string[]; insurance?: PayerSplit }): Promise<Invoice> {
   assertPermission(ctx, "billing:create");
   const ids = [...new Set(input.chargeIds)];
   if (ids.length === 0) throw new AppError("VALIDATION", "Select at least one charge");
@@ -74,6 +77,9 @@ export async function finalizeInvoice(ctx: Ctx, input: { patientId: string; char
     const subtotal = sum(lines.map((l) => fromDecimal128(l.net)));
     const vatTotal = sum(lines.map((l) => fromDecimal128(l.vat)));
     const total = subtotal.plus(vatTotal);
+    const payerShare = input.insurance ? round2(input.insurance.compute(lines, total)) : money(0);
+    if (payerShare.isNegative() || payerShare.gt(total)) throw new AppError("VALIDATION", "Payer share must be between 0 and the invoice total");
+    const patientShare = total.minus(payerShare);
     const year = yearOf();
     const number = docNo("INV", year, await nextSeq(ctx.orgId, `invoice:${year}`, s));
 
@@ -85,16 +91,18 @@ export async function finalizeInvoice(ctx: Ctx, input: { patientId: string; char
     const je = await postJournalSystem(ctx, {
       date: new Date(), memo: `Invoice ${number}`, sourceRef: { type: "invoice", id: invId }, idempotencyKey: `invoice:${invId}`,
       lines: [
-        { accountId: (await accountBySystem(ctx.orgId, "ar_patient"))._id, debit: total.toFixed(2), dims: { branchId: ctx.branchId } },
+        ...(patientShare.gt(0) ? [{ accountId: (await accountBySystem(ctx.orgId, "ar_patient"))._id, debit: patientShare.toFixed(2), dims: { branchId: ctx.branchId } }] : []),
+        ...(payerShare.gt(0) ? [{ accountId: (await accountBySystem(ctx.orgId, "ar_insurance"))._id, debit: payerShare.toFixed(2), dims: { branchId: ctx.branchId } }] : []),
         ...asCredit(await postingLines(ctx.orgId, lines, ctx.branchId)),
         ...(vatTotal.gt(0) ? [{ accountId: (await accountBySystem(ctx.orgId, "vat_output"))._id, credit: vatTotal.toFixed(2), dims: { branchId: ctx.branchId } }] : []),
       ],
     }, s);
 
     const inv: Invoice = {
-      _id: invId, number, patientId: input.patientId, status: "finalized", lines,
+      _id: invId, number, patientId: input.patientId, status: patientShare.isZero() ? "paid" : "finalized", lines,
+      ...(input.insurance ? { policyId: input.insurance.policyId, payerId: input.insurance.payerId, payerShare: toDecimal128(payerShare), patientShare: toDecimal128(patientShare) } : {}),
       subtotal: toDecimal128(subtotal), vatTotal: toDecimal128(vatTotal), total: toDecimal128(total),
-      paid: toDecimal128(money(0)), balance: toDecimal128(total), journalEntryId: je._id, createdAt: new Date(), createdBy: ctx.userId,
+      paid: toDecimal128(money(0)), balance: toDecimal128(patientShare), journalEntryId: je._id, createdAt: new Date(), createdBy: ctx.userId,
     };
     await invoices(ctx.orgId).insertOne(inv, s);
     await audit(s, { orgId: ctx.orgId, actorId: ctx.userId, action: "invoice.finalize", resource: "invoice", resourceId: invId, after: { number, total: total.toFixed(2) } });
@@ -111,6 +119,7 @@ export async function issueCreditNote(ctx: Ctx, input: { invoiceId: string; reas
     const inv = await invoices(ctx.orgId).findOne({ _id: input.invoiceId } as never, s);
     if (!inv) throw new AppError("NOT_FOUND", "Invoice not found");
     if (inv.status === "credited") throw new AppError("CONFLICT", "Invoice already credited");
+    if (inv.payerShare && fromDecimal128(inv.payerShare).gt(0)) throw new AppError("CONFLICT", "Insured invoice: cancel the claim and use the insurance adjustment flow");
     if (inv.status !== "finalized" || !fromDecimal128(inv.paid).isZero()) {
       throw new AppError("CONFLICT", "Refund payments on this invoice before issuing a credit note");
     }

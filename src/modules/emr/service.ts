@@ -217,3 +217,10 @@ export async function findEncounterByAppointment(ctx: Ctx, appointmentId: string
   assertPermission(ctx, "emr:view");
   return enc(ctx.orgId).findOne({ appointmentId } as never);
 }
+
+/** Diagnosis codes only (no clinical narrative) for claim coding. */
+export async function listEncounterDiagnoses(ctx: Ctx, encounterIds: string[]): Promise<Map<string, string[]>> {
+  if (!ctx.permissions.includes("emr:view") && !ctx.permissions.includes("insurance:view")) throw new AppError("FORBIDDEN", "Missing permission emr:view");
+  const rows = await enc(ctx.orgId).find({ _id: { $in: encounterIds } } as never);
+  return new Map(rows.map((e) => [e._id, e.diagnoses.map((d) => d.code)]));
+}

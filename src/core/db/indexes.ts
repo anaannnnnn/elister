@@ -51,6 +51,14 @@ INDEXES.push(
   ["credit_notes", { orgId: 1, invoiceId: 1 }, { unique: true }],
 );
 
+INDEXES.push(
+  ["claims", { orgId: 1, invoiceId: 1 }, { unique: true }],
+  ["claims", { orgId: 1, status: 1, createdAt: -1 }],
+  ["remittances", { orgId: 1, payerId: 1, reference: 1 }, { unique: true }],
+  ["policies", { orgId: 1, patientId: 1 }],
+  ["eligibility_checks", { orgId: 1, policyId: 1, at: -1 }],
+);
+
 export async function ensureIndexes(): Promise<void> {
   const db = await getDb();
   for (const [name, keys, opts] of INDEXES) await db.collection(name).createIndex(keys, opts);

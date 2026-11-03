@@ -29,6 +29,10 @@ export type Invoice = {
   total: Decimal128;
   paid: Decimal128;
   balance: Decimal128;
+  policyId?: string;
+  payerId?: string;
+  payerShare?: Decimal128;
+  patientShare?: Decimal128;
   journalEntryId: string;
   createdAt: Date;
   createdBy: string;
