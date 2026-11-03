@@ -24,13 +24,13 @@ export function getAuth(): Auth {
   return (instance ??= build());
 }
 
-export type Membership = { userId: string; orgId: string; branchId: string; roles: RoleKey[]; active: boolean };
+export type Membership = { userId: string; orgId: string; branchId: string; roles: RoleKey[]; active: boolean; patientId?: string };
 
 export async function loadCtx(userId: string): Promise<Ctx | null> {
   const db = await getDb();
   const m = await db.collection<Membership>("memberships").findOne({ userId, active: true });
   if (!m) return null;
-  return { userId, orgId: m.orgId, branchId: m.branchId, roles: m.roles, permissions: permissionsFor(m.roles) };
+  return { userId, orgId: m.orgId, branchId: m.branchId, roles: m.roles, permissions: permissionsFor(m.roles), ...(m.patientId ? { patientId: m.patientId } : {}) };
 }
 
 setCtxResolver(async () => {

@@ -20,6 +20,7 @@ export type Appointment = {
   type: string;
   status: ApptStatus;
   notes?: string;
+  checkInToken?: string;
   createdAt: Date;
   createdBy: string;
   history: { status: ApptStatus; at: Date; by: string; reason?: string }[];

@@ -18,14 +18,14 @@ const RAW: Record<RoleKey, string[]> = {
   clinic_manager: [
     "patients:*", "appointments:*", "queue:*", "dashboard:view", "dashboard:export", "reports:view", "reports:export",
     "billing:view", "billing:approve", ...v("hr", "inventory", "compliance", "crm"), "crm:create", "crm:update",
-    "communications:*", "org:view", "users:view", "audit:view",
+    "communications:*", "org:view", "users:view", "audit:view", "ai:view",
   ],
   medical_director: [
     "patients:view", "appointments:view", "emr:view", "emr:approve", "emr:audit", "dashboard:view", "reports:view",
     "compliance:*", "audit:view", "audit:audit", ...v("radiology", "pharmacy", "queue"), "laboratory:view", "laboratory:approve",
   ],
   doctor: [
-    "hospital:view", "hospital:create", "hospital:update", "hospital:approve",
+    "hospital:view", "hospital:create", "hospital:update", "hospital:approve", "ai:view", "ai:create",
     "patients:view", "patients:update", "appointments:view", "appointments:update", "queue:view", "queue:update",
     "emr:view", "emr:create", "emr:update", "emr:approve", "pharmacy:view", "pharmacy:create",
     "laboratory:view", "laboratory:create", "radiology:view", "radiology:create", "dashboard:view", "billing:view",
@@ -39,7 +39,7 @@ const RAW: Record<RoleKey, string[]> = {
   receptionist: [
     "patients:view", "patients:create", "patients:update", "appointments:*", "queue:view", "queue:create",
     "queue:update", "billing:view", "billing:create", "billing:update", "dashboard:view", "insurance:view",
-    "insurance:create", "crm:view", "crm:create", "crm:update", "communications:view", "communications:create",
+    "insurance:create", "crm:view", "crm:create", "crm:update", "communications:view", "communications:create", "ai:view",
   ],
   insurance_coordinator: [
     "patients:view", "insurance:view", "insurance:create", "insurance:update", "insurance:export", "billing:view", "billing:create",
@@ -56,9 +56,9 @@ const RAW: Record<RoleKey, string[]> = {
     "patients:view", "insurance:view", "procurement:view", "procurement:create", "procurement:update", "inventory:view",
   ],
   finance_manager: [
-    "ledger:view", "ledger:create", "ledger:approve", "ledger:export", "ledger:audit", "billing:*", "reports:*", "hr:view", "hr:approve",
+    "ledger:view", "ledger:create", "ledger:approve", "ledger:export", "ledger:audit", "billing:*", "reports:*", "hr:view", "hr:approve", "ai:view",
     "dashboard:*", "patients:view", "insurance:view", "insurance:approve", "procurement:approve", "procurement:view",
-    "audit:view", "hr:view", "hr:approve",
+    "audit:view", "hr:view", "hr:approve", "ai:view",
   ],
   hr_manager: ["hr:*", "users:view", "dashboard:view", "reports:view", "compliance:view"],
   inventory_manager: ["inventory:*", "procurement:*", "pharmacy:view", "dashboard:view", "reports:view"],

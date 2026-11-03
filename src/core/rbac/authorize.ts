@@ -6,6 +6,8 @@ export type Ctx = {
   userId: string;
   orgId: string;
   branchId: string;
+  /** Set only for patient-portal users: the one patient record they may access. */
+  patientId?: string;
   roles: RoleKey[];
   permissions: Permission[];
 };

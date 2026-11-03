@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { randomBytes } from "node:crypto";
 import type { ClientSession } from "mongodb";
 import { tenantCol, withTransaction } from "@/core/db";
 import { precreateLock as preLock, bumpLock } from "@/core/locks";
@@ -52,6 +53,7 @@ export async function bookAppointment(ctx: Ctx, input: BookInput): Promise<Appoi
       start: d.start,
       end: d.end,
       type: d.type,
+      checkInToken: randomBytes(9).toString("base64url"),
       status: "booked",
       notes: d.notes,
       createdAt: new Date(),
