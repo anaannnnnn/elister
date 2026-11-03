@@ -123,3 +123,34 @@ export async function getChargesByIds(ctx: Ctx, ids: string[]): Promise<Charge[]
   if (!ctx.permissions.includes("billing:view") && !ctx.permissions.includes("insurance:view")) throw new AppError("FORBIDDEN", "Missing permission billing:view");
   return charges(ctx.orgId).find({ _id: { $in: ids } } as never);
 }
+
+type ItemLike = { _id: string; sku: string; name: string; sellingPrice?: Decimal128; taxCode: string };
+
+/** Pharmacy/lab/other dispensed-item charge. Idempotent on autoKey. Runs in the caller's transaction. */
+export async function createItemCharge(
+  ctx: Ctx, p: { encounterId: string; patientId: string; doctorId?: string; item: ItemLike; qty: number; kind: string; revenueAccountSystem: string; autoKey: string }, s: ClientSession,
+): Promise<Charge> {
+  if (!p.item.sellingPrice) throw new AppError("VALIDATION", `${p.item.name} has no selling price`);
+  const tax = await tenantCol<{ code: string; rate: Decimal128 }>(ctx.orgId, "tax_codes").findOne({ code: p.item.taxCode } as never, s);
+  if (!tax) throw new AppError("VALIDATION", `Tax code ${p.item.taxCode} not configured`);
+  const c: Charge = {
+    _id: newId(), patientId: p.patientId, encounterId: p.encounterId, serviceId: p.item._id, serviceCode: p.item.sku, name: p.item.name, kind: p.kind, qty: p.qty,
+    unitPrice: p.item.sellingPrice, taxCode: p.item.taxCode, taxRate: tax.rate, revenueAccountSystem: p.revenueAccountSystem, doctorId: p.doctorId,
+    status: "unbilled", autoKey: p.autoKey, createdAt: new Date(), createdBy: ctx.userId,
+  };
+  const res = await charges(ctx.orgId).updateOne({ encounterId: p.encounterId, autoKey: p.autoKey } as never, { $setOnInsert: c } as never, s, { upsert: true });
+  if (res.upsertedCount) {
+    await audit(s, { orgId: ctx.orgId, actorId: ctx.userId, action: "charge.auto", resource: "charge", resourceId: c._id, after: { serviceCode: c.serviceCode, qty: p.qty } });
+    await emit(s, ctx.orgId, "charge.created", { chargeId: c._id });
+  }
+  return c;
+}
+
+/** Reduce (or void) an unbilled auto charge, e.g. on a medication return. Invoiced charges need a credit note instead. */
+export async function reduceItemCharge(ctx: Ctx, encounterId: string, autoKey: string, qty: number, s: ClientSession): Promise<void> {
+  const c = await charges(ctx.orgId).findOne({ encounterId, autoKey } as never, s);
+  if (!c) return;
+  if (c.status !== "unbilled") throw new AppError("CONFLICT", "The charge is already invoiced; issue a credit note instead");
+  const left = c.qty - qty;
+  await charges(ctx.orgId).updateOne({ _id: c._id } as never, { $set: left <= 0 ? { status: "void", qty: 0 } : { qty: left } } as never, s);
+}

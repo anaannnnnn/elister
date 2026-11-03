@@ -224,3 +224,10 @@ export async function listEncounterDiagnoses(ctx: Ctx, encounterIds: string[]): 
   const rows = await enc(ctx.orgId).find({ _id: { $in: encounterIds } } as never);
   return new Map(rows.map((e) => [e._id, e.diagnoses.map((d) => d.code)]));
 }
+
+/** Minimal encounter facts for modules that attach orders/charges to an encounter. */
+export async function getEncounterBrief(ctx: Ctx, encounterId: string) {
+  if (!ctx.permissions.includes("emr:view") && !ctx.permissions.includes("pharmacy:view") && !ctx.permissions.includes("laboratory:view")) throw new AppError("FORBIDDEN", "Missing permission emr:view");
+  const e = await loadEncounter(ctx, encounterId);
+  return { _id: e._id, patientId: e.patientId, doctorId: e.doctorId, branchId: e.branchId, status: e.status };
+}

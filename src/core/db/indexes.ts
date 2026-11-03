@@ -74,6 +74,12 @@ INDEXES.push(
   ["purchase_requests", { orgId: 1, number: 1 }, { unique: true }],
 );
 
+INDEXES.push(
+  ["prescriptions", { orgId: 1, patientId: 1, createdAt: -1 }],
+  ["prescriptions", { orgId: 1, status: 1 }],
+  ["dispensings", { orgId: 1, idempotencyKey: 1 }, { unique: true }],
+);
+
 export async function ensureIndexes(): Promise<void> {
   const db = await getDb();
   for (const [name, keys, opts] of INDEXES) await db.collection(name).createIndex(keys, opts);
