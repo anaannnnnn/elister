@@ -74,3 +74,17 @@ export async function patientNames(ctx: Ctx, ids: string[]): Promise<Map<string,
   const rows = await tenantCol<Patient>(ctx.orgId, COL).find({ _id: { $in: [...new Set(ids)] } } as never);
   return new Map(rows.map((p) => [p._id, { fullName: p.fullName, mrn: p.mrn }]));
 }
+
+
+export type ContactInfo = { id: string; fullName: string; phone: string; email?: string; preferredLanguage: string; referralSource?: string; commPrefs: Record<string, boolean>; createdAt: Date };
+
+/** Contact-only projection for CRM and communications. Deliberately excludes every clinical field (allergies, alerts, identifiers). */
+export async function contactInfo(ctx: Ctx, ids: string[]): Promise<Map<string, ContactInfo>> {
+  if (!["crm:view", "communications:view", "patients:view"].some((p) => ctx.permissions.includes(p as never))) throw new AppError("FORBIDDEN", "Missing permission crm:view");
+  const rows = await tenantCol<Patient>(ctx.orgId, COL).find({ _id: { $in: [...new Set(ids)] } } as never);
+  return new Map(rows.map((p) => [p._id, { id: p._id, fullName: p.fullName, phone: p.phone, email: p.email, preferredLanguage: p.preferredLanguage, referralSource: p.referralSource, commPrefs: p.commPrefs, createdAt: p.createdAt }]));
+}
+export async function listContactIds(ctx: Ctx, limit = 5000): Promise<string[]> {
+  if (!["crm:view", "communications:view", "patients:view"].some((p) => ctx.permissions.includes(p as never))) throw new AppError("FORBIDDEN", "Missing permission crm:view");
+  return (await tenantCol<Patient>(ctx.orgId, COL).find({} as never, { limit })).map((p) => p._id);
+}

@@ -37,7 +37,7 @@ const RAW: Record<RoleKey, string[]> = {
   receptionist: [
     "patients:view", "patients:create", "patients:update", "appointments:*", "queue:view", "queue:create",
     "queue:update", "billing:view", "billing:create", "billing:update", "dashboard:view", "insurance:view",
-    "insurance:create", "crm:view", "crm:create", "communications:view",
+    "insurance:create", "crm:view", "crm:create", "crm:update", "communications:view", "communications:create",
   ],
   insurance_coordinator: [
     "patients:view", "insurance:view", "insurance:create", "insurance:update", "insurance:export", "billing:view", "billing:create",

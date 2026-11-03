@@ -17,6 +17,7 @@ export const PatientInput = z.object({
   guardianPatientId: z.string().optional(),
   allergies: z.array(z.object({ substance: z.string(), reaction: z.string().optional(), severity: z.enum(["mild", "moderate", "severe"]).optional() })).default([]),
   alerts: z.array(z.string()).default([]),
+  referralSource: z.string().optional(),
   preferredLanguage: z.enum(["en", "ar"]).default("en"),
   commPrefs: z.object({ sms: z.boolean(), email: z.boolean(), whatsapp: z.boolean(), marketing: z.boolean() })
     .default({ sms: true, email: true, whatsapp: false, marketing: false }),
@@ -30,6 +31,6 @@ export type Patient = {
   emiratesIdEnc?: string; emiratesIdHash?: string; emiratesIdMasked?: string; passportNo?: string;
   emergencyContact?: unknown; guardianPatientId?: string;
   allergies: { substance: string; reaction?: string; severity?: string }[]; alerts: string[];
-  preferredLanguage: string; commPrefs: Record<string, boolean>; consents: unknown[];
+  referralSource?: string; preferredLanguage: string; commPrefs: Record<string, boolean>; consents: unknown[];
   createdAt: Date; createdBy: string;
 };
