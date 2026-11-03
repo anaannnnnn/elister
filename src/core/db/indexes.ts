@@ -89,6 +89,13 @@ INDEXES.push(
   ["notifications", { orgId: 1, userId: 1, at: -1 }],
 );
 
+INDEXES.push(
+  ["register_sessions", { orgId: 1, cashierId: 1 }, { unique: true, partialFilterExpression: { status: "open" } }],
+  ["bank_transactions", { orgId: 1, account: 1, status: 1, date: 1 }],
+  ["budgets", { orgId: 1, year: 1, accountCode: 1 }, { unique: true }],
+  ["draft_journals", { orgId: 1, status: 1 }],
+);
+
 export async function ensureIndexes(): Promise<void> {
   const db = await getDb();
   for (const [name, keys, opts] of INDEXES) await db.collection(name).createIndex(keys, opts);

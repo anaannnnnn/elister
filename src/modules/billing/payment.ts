@@ -182,3 +182,14 @@ export async function listInvoicePayments(ctx: Ctx, invoiceId: string): Promise<
   assertPermission(ctx, "billing:view");
   return payments(ctx.orgId).find({ invoiceId } as never, { sort: { at: 1 } });
 }
+
+/** Cash taken (net of cash refunds) by one cashier between two instants. Used for cash drawer reconciliation. */
+export async function cashTakenBy(ctx: Ctx, userId: string, from: Date, to: Date) {
+  assertPermission(ctx, "billing:view");
+  const pays = await payments(ctx.orgId).find({ method: "cash", by: userId, at: { $gte: from, $lte: to } } as never, { limit: 100000 });
+  const refs = await refunds(ctx.orgId).find({ by: userId, at: { $gte: from, $lte: to } } as never, { limit: 100000 });
+  const refPay = new Map((await payments(ctx.orgId).find({ _id: { $in: refs.map((r) => r.paymentId) } } as never)).map((p) => [p._id, p.method]));
+  const cashIn = pays.reduce((a, p) => a.plus(fromDecimal128(p.amount)), money(0));
+  const cashOut = refs.filter((r) => refPay.get(r.paymentId) === "cash").reduce((a, r) => a.plus(fromDecimal128(r.amount)), money(0));
+  return { cashIn, cashOut, net: cashIn.minus(cashOut) };
+}

@@ -23,7 +23,7 @@ let patientId = "", hgb = "", glu = "";
 
 beforeAll(async () => {
   await ensureIndexes();
-  await tenantCol<any>(ORG, "tax_codes").insertOne({ _id: "t", code: "STD", rate: toDecimal128(money("5")), kind: "standard", reviewRequired: true });
+  await tenantCol<any>(ORG, "tax_codes").insertOne({ _id: `${ORG}:t`, code: "STD", rate: toDecimal128(money("5")), kind: "standard", reviewRequired: true });
   await tenantCol<any>(ORG, "services").insertOne({ _id: "svc-hgb", code: "LAB-HGB", name: "Haemoglobin", kind: "lab", price: toDecimal128(money("45.00")), taxCode: "STD", revenueAccountSystem: "rev_laboratory", departmentId: "LAB", active: true });
   await tenantCol<any>(ORG, "services").insertOne({ _id: "svc-xr", code: "RAD-CXR", name: "Chest X-ray", kind: "radiology", price: toDecimal128(money("120.00")), taxCode: "STD", revenueAccountSystem: "rev_procedure", departmentId: "RAD", active: true });
   await tenantCol<any>(ORG, "staff").insertOne({ _id: "doc-staff", userKey: "d", userId: "doc1", name: "Dr Lab", workDays: [1], workStart: "09:00", workEnd: "17:00", slotMinutes: 20, branchId: "br1", active: true });

@@ -46,6 +46,8 @@ export const DEFAULT_COA: Omit<Account, "_id" | "active">[] = [
   { code: "5600", name: "Equipment Maintenance", type: "expense", normal: D },
   { code: "5700", name: "Marketing", type: "expense", normal: D },
   { code: "5800", name: "Administrative Expenses", type: "expense", normal: D },
+  { code: "5330", name: "Cash Over and Short", type: "expense", normal: D, system: "cash_variance" },
+  { code: "5810", name: "Bank and Card Charges", type: "expense", normal: D, system: "bank_charges" },
   { code: "5900", name: "Depreciation", type: "expense", normal: D },
   { code: "5950", name: "Bad Debt and Insurance Write-offs", type: "expense", normal: D, system: "writeoff" },
   { code: "1015", name: "Petty Cash", type: "asset", normal: D, system: "petty_cash" },

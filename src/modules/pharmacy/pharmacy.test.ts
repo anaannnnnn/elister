@@ -43,7 +43,7 @@ beforeAll(async () => {
   const y = new Date().getUTCFullYear();
   for (const year of [y - 1, y, y + 1]) for (let m = 1; m <= 12; m++)
     await tenantCol<any>(ORG, "fiscal_periods").insertOne({ _id: `${ORG}:${year}-${m}`, year, month: m, status: "open", start: new Date(Date.UTC(year, m - 1, 1, -4)), end: new Date(Date.UTC(year, m, 1, -4)) });
-  await tenantCol<any>(ORG, "tax_codes").insertOne({ _id: "t", code: "STD", rate: toDecimal128(money("5")), kind: "standard", reviewRequired: true });
+  await tenantCol<any>(ORG, "tax_codes").insertOne({ _id: `${ORG}:t`, code: "STD", rate: toDecimal128(money("5")), kind: "standard", reviewRequired: true });
   patientId = (await createPatient(reg, { fullName: "Rx Patient", dob: "1990-03-03", sex: "female", phone: "+971508880001", allergies: [{ substance: "Amoxicillin", severity: "severe" }] }))._id;
   await tenantCol<any>(ORG, "encounters").insertOne({ _id: "enc-rx", patientId, doctorId: "d", branchId: "br1", appointmentId: "a", status: "open", diagnoses: [], vitals: [], openedAt: new Date(), openedBy: "x" });
   enc = "enc-rx";
