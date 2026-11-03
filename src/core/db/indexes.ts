@@ -10,6 +10,13 @@ export const INDEXES: Idx[] = [
   ["outbox", { status: 1, nextAttemptAt: 1 }],
 ];
 
+INDEXES.push(
+  ["appointments", { orgId: 1, doctorId: 1, start: 1 }],
+  ["appointments", { orgId: 1, patientId: 1, start: -1 }],
+  ["slot_locks", { orgId: 1, doctorId: 1, day: 1 }, { unique: true }],
+  ["time_off", { orgId: 1, doctorId: 1, start: 1 }],
+);
+
 export async function ensureIndexes(): Promise<void> {
   const db = await getDb();
   for (const [name, keys, opts] of INDEXES) await db.collection(name).createIndex(keys, opts);
