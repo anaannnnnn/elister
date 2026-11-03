@@ -206,3 +206,14 @@ export async function completeEncounter(ctx: Ctx, encounterId: string): Promise<
   publish(ctx.orgId, { type: "queue.updated", branchId: e0.branchId, payload: { reason: "consult_done" } });
   return out;
 }
+
+export async function listPatientEncounters(ctx: Ctx, patientId: string) {
+  assertPermission(ctx, "emr:view");
+  return enc(ctx.orgId).find({ patientId } as never, { sort: { openedAt: -1 }, limit: 100 });
+}
+
+/** Encounter for an appointment, if one has been opened (used to link queue/appointment rows to the workspace). */
+export async function findEncounterByAppointment(ctx: Ctx, appointmentId: string) {
+  assertPermission(ctx, "emr:view");
+  return enc(ctx.orgId).findOne({ appointmentId } as never);
+}

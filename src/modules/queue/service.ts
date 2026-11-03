@@ -105,3 +105,13 @@ export async function publicBoard(orgId: string, branchId: string): Promise<Boar
   const label = new Map(staff.map((d) => [d._id, d.name]));
   return rows.map((r) => ({ number: r.number, status: r.status, doctorLabel: label.get(r.doctorId) ?? "Doctor" }));
 }
+
+/** Staff view of today's queue for a branch (includes patient ids; names resolved by the caller). */
+export async function listTodayTokens(ctx: Ctx, branchId?: string): Promise<Token[]> {
+  assertPermission(ctx, "queue:view");
+  const { start } = dubaiDayRange(new Date());
+  return tokens(ctx.orgId).find(
+    { checkedInAt: { $gte: start }, ...(branchId ? { branchId } : {}) } as never,
+    { sort: { number: 1 }, limit: 500 },
+  );
+}

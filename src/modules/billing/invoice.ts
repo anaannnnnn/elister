@@ -147,3 +147,13 @@ export async function getInvoice(ctx: Ctx, id: string): Promise<Invoice> {
   if (!inv) throw new AppError("NOT_FOUND", "Invoice not found");
   return inv;
 }
+
+export async function listPatientInvoices(ctx: Ctx, patientId: string): Promise<Invoice[]> {
+  assertPermission(ctx, "billing:view");
+  return invoices(ctx.orgId).find({ patientId } as never, { sort: { createdAt: -1 }, limit: 100 });
+}
+
+export async function listOpenInvoices(ctx: Ctx): Promise<Invoice[]> {
+  assertPermission(ctx, "billing:view");
+  return invoices(ctx.orgId).find({ status: { $in: ["finalized", "partially_paid"] } } as never, { sort: { createdAt: -1 }, limit: 200 });
+}

@@ -22,3 +22,8 @@ export async function lockPeriod(ctx: Ctx, year: number, month: number): Promise
     await audit(s, { orgId: ctx.orgId, actorId: ctx.userId, action: "period.lock", resource: "fiscal_period", resourceId: `${year}-${month}` });
   });
 }
+
+export async function listPeriods(ctx: Ctx): Promise<FiscalPeriod[]> {
+  assertPermission(ctx, "ledger:view");
+  return tenantCol<FiscalPeriod>(ctx.orgId, "fiscal_periods").find({} as never, { sort: { year: 1, month: 1 } });
+}

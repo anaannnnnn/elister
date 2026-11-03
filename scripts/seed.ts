@@ -19,7 +19,7 @@ const USERS: { email: string; name: string; roles: RoleKey[]; userKey?: string }
   { email: "auditor@demo.local", name: "Demo Auditor", roles: ["auditor"] },
 ];
 
-async function main() {
+export async function seedAll() {
   await ensureIndexes();
   const { orgId, branchId } = await seedOrg();
   const ctx = await getAuth().$context;
@@ -42,4 +42,7 @@ async function main() {
   console.log(`Seeded org ${orgId} with ${USERS.length} synthetic users. Password: ${PASSWORD}`);
 }
 
-main().then(() => closeClient()).catch(async (e) => { console.error(e); await closeClient(); process.exit(1); });
+import { pathToFileURL } from "node:url";
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  seedAll().then(async () => { await closeClient(); process.exit(0); }).catch(async (e) => { console.error(e); await closeClient(); process.exit(1); });
+}

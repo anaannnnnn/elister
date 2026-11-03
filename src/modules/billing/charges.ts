@@ -107,3 +107,13 @@ export async function listUnbilledCharges(ctx: Ctx, patientId: string): Promise<
   assertPermission(ctx, "billing:view");
   return charges(ctx.orgId).find({ patientId, status: "unbilled" } as never, { sort: { createdAt: 1 } });
 }
+
+export async function listServices(ctx: Ctx) {
+  if (!ctx.permissions.includes("billing:view") && !ctx.permissions.includes("emr:view")) throw new AppError("FORBIDDEN", "Missing permission billing:view");
+  return tenantCol<Service>(ctx.orgId, "services").find({ active: true } as never, { sort: { name: 1 } });
+}
+
+export async function listEncounterCharges(ctx: Ctx, encounterId: string): Promise<Charge[]> {
+  if (!ctx.permissions.includes("billing:view") && !ctx.permissions.includes("emr:view")) throw new AppError("FORBIDDEN", "Missing permission billing:view");
+  return charges(ctx.orgId).find({ encounterId } as never, { sort: { createdAt: 1 } });
+}

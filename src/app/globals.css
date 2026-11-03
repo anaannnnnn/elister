@@ -1,26 +1,62 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #f7f9fa;
+  --surface: #ffffff;
+  --surface-2: #f1f5f6;
+  --border: #e2e8ea;
+  --fg: #12202a;
+  --muted: #5d6f7a;
+  --primary: #0f766e; /* medical teal */
+  --primary-fg: #ffffff;
+  --accent: #0e7490;
+  --ok: #15803d;
+  --warn: #b45309;
+  --danger: #b91c1c;
+  --radius: 0.625rem;
+}
+.dark {
+  --bg: #0b1317;
+  --surface: #111c22;
+  --surface-2: #162630;
+  --border: #223540;
+  --fg: #e6eef2;
+  --muted: #8ba0ac;
+  --primary: #2dd4bf;
+  --primary-fg: #04201c;
+  --accent: #22d3ee;
+  --ok: #4ade80;
+  --warn: #fbbf24;
+  --danger: #f87171;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-primary: var(--primary);
+  --color-primary-fg: var(--primary-fg);
+  --color-accent: var(--accent);
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
+  --color-danger: var(--danger);
+  --radius-ui: var(--radius);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, "Segoe UI", Tahoma, sans-serif;
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+html { color-scheme: light; }
+html.dark { color-scheme: dark; }
+body { background: var(--bg); color: var(--fg); font-size: 14px; }
+:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-}
+@keyframes shimmer { 0% { background-position: -200px 0; } 100% { background-position: 200px 0; } }
+.skeleton { background: linear-gradient(90deg, var(--surface-2) 25%, var(--border) 50%, var(--surface-2) 75%); background-size: 400px 100%; animation: shimmer 1.4s infinite; border-radius: var(--radius); }
+
+@media print { .no-print { display: none !important; } body { background: #fff; color: #000; } }

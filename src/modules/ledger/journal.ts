@@ -146,3 +146,11 @@ export async function getJournal(ctx: Ctx, id: string): Promise<JournalEntry> {
   if (!e) throw new AppError("NOT_FOUND", "Journal entry not found");
   return e;
 }
+
+export async function listJournals(ctx: Ctx, limit = 50) {
+  assertPermission(ctx, "ledger:view");
+  const rows = await entries(ctx.orgId).find({} as never, { sort: { entryNo: -1 }, limit });
+  const rev = await tenantCol<{ entryId: string }>(ctx.orgId, "journal_reversals").find({ entryId: { $in: rows.map((r) => r._id) } } as never);
+  const reversed = new Set(rev.map((r) => r.entryId));
+  return rows.map((r) => ({ ...r, reversed: reversed.has(r._id) }));
+}

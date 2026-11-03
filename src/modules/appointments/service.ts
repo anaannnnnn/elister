@@ -148,3 +148,20 @@ export async function listAppointments(
     { sort: { start: 1 }, limit: 500 },
   );
 }
+
+export async function listPatientAppointments(ctx: Ctx, patientId: string) {
+  assertPermission(ctx, "appointments:view");
+  return tenantCol<Appointment>(ctx.orgId, COL).find({ patientId } as never, { sort: { start: -1 }, limit: 100 });
+}
+
+export async function listDoctors(ctx: Ctx) {
+  assertPermission(ctx, "appointments:view");
+  return tenantCol<{ _id: string; name: string; nameAr?: string; specialty?: string; slotMinutes: number; workStart: string; workEnd: string; workDays: number[] }>(ctx.orgId, "staff").find({ active: true, role: "doctor" } as never, { sort: { name: 1 } });
+}
+
+export async function getAppointment(ctx: Ctx, id: string) {
+  assertPermission(ctx, "appointments:view");
+  const a = await tenantCol<Appointment>(ctx.orgId, COL).findOne({ _id: id } as never);
+  if (!a) throw new AppError("NOT_FOUND", "Appointment not found");
+  return a;
+}

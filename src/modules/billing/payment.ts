@@ -177,3 +177,8 @@ export async function getReceipt(ctx: Ctx, paymentId: string) {
   const org = await tenantCol<{ name: string; currency: string; trn?: string }>(ctx.orgId, "orgs").findOne({ _id: ctx.orgId } as never);
   return { payment: pay, invoice: inv, org };
 }
+
+export async function listInvoicePayments(ctx: Ctx, invoiceId: string): Promise<Payment[]> {
+  assertPermission(ctx, "billing:view");
+  return payments(ctx.orgId).find({ invoiceId } as never, { sort: { at: 1 } });
+}

@@ -67,3 +67,10 @@ export async function searchPatients(ctx: Ctx, q: string): Promise<PatientHit[]>
   );
   return rows.map((p) => ({ _id: p._id, mrn: p.mrn, fullName: p.fullName, fullNameAr: p.fullNameAr, dob: p.dob, phone: p.phone }));
 }
+
+/** Lightweight id -> name lookup for list screens (no clinical data, not audited per row). */
+export async function patientNames(ctx: Ctx, ids: string[]): Promise<Map<string, { fullName: string; mrn: string }>> {
+  assertPermission(ctx, "patients:view");
+  const rows = await tenantCol<Patient>(ctx.orgId, COL).find({ _id: { $in: [...new Set(ids)] } } as never);
+  return new Map(rows.map((p) => [p._id, { fullName: p.fullName, mrn: p.mrn }]));
+}

@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "seed": "tsx scripts/seed.ts"
+    "seed": "tsx scripts/seed.ts",
+    "dev:local": "tsx scripts/dev-local.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.105.3",
