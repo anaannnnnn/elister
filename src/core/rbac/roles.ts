@@ -54,9 +54,9 @@ const RAW: Record<RoleKey, string[]> = {
     "patients:view", "insurance:view", "procurement:view", "procurement:create", "procurement:update", "inventory:view",
   ],
   finance_manager: [
-    "ledger:view", "ledger:create", "ledger:approve", "ledger:export", "ledger:audit", "billing:*", "reports:*",
+    "ledger:view", "ledger:create", "ledger:approve", "ledger:export", "ledger:audit", "billing:*", "reports:*", "hr:view", "hr:approve",
     "dashboard:*", "patients:view", "insurance:view", "insurance:approve", "procurement:approve", "procurement:view",
-    "audit:view",
+    "audit:view", "hr:view", "hr:approve",
   ],
   hr_manager: ["hr:*", "users:view", "dashboard:view", "reports:view", "compliance:view"],
   inventory_manager: ["inventory:*", "procurement:*", "pharmacy:view", "dashboard:view", "reports:view"],
