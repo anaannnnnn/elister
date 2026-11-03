@@ -12,7 +12,7 @@ type Item = { href: string; label: string; icon: keyof typeof ICONS };
 const GROUP_OF: Record<string, string> = {
   "/dashboard": "Overview", "/portal": "Overview",
   "/patients": "Clinical", "/appointments": "Clinical", "/queue": "Clinical", "/laboratory": "Clinical", "/radiology": "Clinical", "/pharmacy": "Clinical", "/hospital": "Clinical",
-  "/billing": "Revenue", "/insurance": "Revenue", "/accounting": "Finance", "/finance": "Finance", "/procurement": "Operations", "/inventory": "Operations",
+  "/billing": "Revenue", "/insurance": "Revenue", "/accounting": "Finance", "/finance": "Finance", "/tax": "Finance", "/procurement": "Operations", "/inventory": "Operations",
   "/hr": "People", "/crm": "People", "/communications": "People",
   "/compliance": "Platform", "/ai": "Platform", "/settings/security": "Platform",
 };
@@ -82,7 +82,7 @@ export function Shell({
                   return (
                     <Link key={i.href} href={i.href} title={i.label} aria-current={active ? "page" : undefined}
                       className={cn("group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors", collapsed && "justify-center", active ? "bg-white/[0.14] font-medium text-white" : "text-white/70 hover:bg-white/[0.08] hover:text-white")}>
-                      {active && <span aria-hidden className="absolute inset-y-2 start-0 w-1 rounded-e-full bg-cyan-300" />}
+                      {active && <span aria-hidden className="absolute inset-y-2 start-0 w-1 rounded-e-full bg-gradient-to-b from-cyan-200 to-teal-300" />}
                       <Icon size={18} className={cn("shrink-0", active ? "text-cyan-200" : "text-white/60 group-hover:text-cyan-200")} />
                       {!collapsed && <span className="truncate">{i.label}</span>}
                     </Link>
@@ -101,6 +101,8 @@ export function Shell({
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="no-print glass sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-border/70 px-4 md:px-6">
+          <span aria-hidden className="accent-grad absolute inset-x-0 top-0 h-[3px]" />
+          <Link href="/dashboard" className="shrink-0 md:hidden" aria-label="Elister Med home"><Image src="/brand/logo-footer.png" alt="Elister Med" width={235} height={117} className="h-9 w-auto dark:hidden" /><Image src="/brand/logo-header.png" alt="Elister Med" width={227} height={109} className="hidden h-9 w-auto dark:block" /></Link>
           <nav aria-label="Breadcrumb" className="hidden min-w-0 items-center gap-1.5 text-sm text-muted sm:flex">
             <Link href="/dashboard" className="hover:text-fg">Home</Link>
             {crumbs.map((c, i) => (
@@ -124,7 +126,7 @@ export function Shell({
         </header>
         <MobileNav items={items} path={path} />
         <main className="flex-1 p-4 md:p-8"><div className="mx-auto max-w-[1400px]">{children}</div></main>
-        <footer className="no-print border-t border-border/70 px-6 py-3 text-center text-[11px] text-muted">Elister Med · Your Trusted Family Healthcare Partner in Dubai · Demo environment with synthetic data</footer>
+        <footer className="no-print border-t border-border/70 px-6 py-3 text-center text-[11px] text-muted"><Image src="/brand/mark.png" alt="" aria-hidden width={14} height={14} className="me-1.5 inline-block align-[-2px]" />Elister Med · Your Trusted Family Healthcare Partner in Dubai · Demo environment with synthetic data</footer>
       </div>
       {open && <Palette onClose={() => setOpen(false)} entries={[...items.map((i) => ({ href: i.href, label: i.label })), ...quick]} />}
     </div>

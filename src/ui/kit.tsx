@@ -9,7 +9,7 @@ export function Card({ title, action, children, className, flush }: { title?: Re
     <section className={cn("overflow-hidden rounded-2xl border border-border bg-surface shadow-card", className)}>
       {(title || action) && (
         <header className="flex items-center justify-between gap-3 border-b border-border/70 px-5 py-3.5">
-          <h2 className="flex items-center gap-2.5 text-sm font-semibold tracking-tight"><span aria-hidden className="h-4 w-1 rounded-full brand-grad" />{title}</h2>
+          <h2 className="flex items-center gap-2.5 text-sm font-semibold tracking-tight"><span aria-hidden className="h-4 w-1 rounded-full accent-grad" />{title}</h2>
           {action}
         </header>
       )}
@@ -26,7 +26,7 @@ export function Stat({ label, value, hint, tone, icon, trend }: { label: string;
       <span aria-hidden className={cn("absolute inset-x-0 top-0 h-0.5", tone === "danger" ? "bg-danger" : tone === "warn" ? "bg-warn" : tone === "ok" ? "bg-ok" : "brand-grad")} />
       <div className="flex items-start justify-between gap-2">
         <div className="text-[11px] font-semibold uppercase tracking-wider text-muted">{label}</div>
-        {icon && <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">{icon}</span>}
+        {icon && <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-primary/15 to-teal/15 text-primary">{icon}</span>}
       </div>
       <div className={cn("mt-2 text-[26px] font-semibold leading-none tracking-tight tabular-nums", tone === "ok" && "text-ok", tone === "warn" && "text-warn", tone === "danger" && "text-danger")}>{value}</div>
       <div className="mt-2 flex min-h-5 items-center gap-2 text-xs text-muted">
@@ -71,7 +71,7 @@ export function Table({ head, children, empty }: { head: string[]; children: Rea
   return (
     <div className="overflow-x-auto rounded-xl border border-border/80">
       <table className="w-full text-sm">
-        <thead className="bg-surface-2/70">
+        <thead className="tint">
           <tr className="text-start">
             {head.map((h) => (
               <th key={h} className="whitespace-nowrap px-3.5 py-2.5 text-start text-[11px] font-semibold uppercase tracking-wider text-muted">{h}</th>
@@ -127,7 +127,7 @@ export function Tabs({ tabs, active, base = "" }: { tabs: { key: string; label: 
     <nav className="mb-1 inline-flex max-w-full flex-wrap gap-1 rounded-xl bg-surface-2 p-1" aria-label="Sections">
       {tabs.map((t) => (
         <a key={t.key} href={`${base}?tab=${t.key}`} aria-current={t.key === active ? "page" : undefined}
-          className={cn("rounded-lg px-3.5 py-1.5 text-sm transition-all", t.key === active ? "bg-surface font-semibold text-primary-strong shadow-sm" : "text-muted hover:text-fg")}>{t.label}</a>
+          className={cn("rounded-lg px-3.5 py-1.5 text-sm transition-all", t.key === active ? "bg-surface font-semibold text-primary-strong shadow-sm ring-1 ring-primary/15 [box-shadow:inset_0_-2px_0_var(--teal)]" : "text-muted hover:text-fg")}>{t.label}</a>
       ))}
     </nav>
   );
@@ -149,7 +149,7 @@ export function BarList({ rows, empty = "No data in this period." }: { rows: { l
   );
 }
 
-const DONUT = ["#0b4a7e", "#0a7ba5", "#3bb8d0", "#00a0a0", "#7fd6e6", "#5b7a99"];
+const DONUT = ["#0b4a7e", "#0090c0", "#00a0a0", "#3bb8d0", "#7fd6e6", "#5b7a99"];
 /** Accessible donut chart with a legend. */
 export function Donut({ parts, centre }: { parts: { label: string; value: number; display: string }[]; centre?: ReactNode }) {
   const total = parts.reduce((a, p) => a + p.value, 0);

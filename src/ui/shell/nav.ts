@@ -17,6 +17,7 @@ export const NAV: NavItem[] = [
   { href: "/laboratory", labelKey: "nav.laboratory", perm: "laboratory:view", icon: "flask" },
   { href: "/radiology", labelKey: "nav.radiology", perm: "radiology:view", icon: "flask" },
   { href: "/finance", labelKey: "nav.finance", perm: "reports:view", icon: "bank" },
+  { href: "/tax", labelKey: "nav.tax", perm: "ledger:view", icon: "bank" },
   { href: "/hr", labelKey: "nav.hr", perm: "hr:view", icon: "people" },
   { href: "/crm", labelKey: "nav.crm", perm: "crm:view", icon: "chat" },
   { href: "/communications", labelKey: "nav.communications", perm: "communications:view", icon: "chat" },

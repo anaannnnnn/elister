@@ -1,5 +1,8 @@
 import type { Ctx } from "@/core/rbac/authorize";
 import { AppError } from "@/core/errors";
+import * as ct from "@/modules/tax/corporateTax";
+import * as fa from "@/modules/assets/service";
+import * as exp from "@/modules/finance/expenses";
 import * as ins from "@/modules/insurance/masters";
 import * as claims from "@/modules/insurance/claims";
 import * as inv from "@/modules/inventory/service";
@@ -36,6 +39,18 @@ const list = (fd: FormData, k: string) => s(fd, k).split(/[,\n]/).map((x) => x.t
 const key = (fd: FormData) => o(fd, "idem") ?? randomUUID();
 
 export const ACTIONS: Record<string, Act> = {
+  // ---------- corporate tax, fixed assets, expenses ----------
+  "tax.config": async (c, f) => { await ct.setTaxConfig(c, { trn: o(f, "trn"), registered: b(f, "registered"), sbrElected: b(f, "sbr"), firstYear: on(f, "firstYear"), lossesBroughtForward: o(f, "losses") ?? "0.00", notes: o(f, "notes") }); },
+  "tax.adjust": async (c, f) => { await ct.addTaxAdjustment(c, { year: n(f, "year"), kind: s(f, "kind") as "add_back" | "deduct", label: s(f, "label"), amount: s(f, "amount"), note: o(f, "note") }); },
+  "tax.adjustRemove": async (c, f) => { await ct.removeTaxAdjustment(c, s(f, "id")); },
+  "tax.provision": async (c, f) => { await ct.provisionCorporateTax(c, n(f, "year")); },
+  "tax.pay": async (c, f) => { await ct.payCorporateTax(c, { year: n(f, "year"), amount: s(f, "amount"), method: s(f, "method") === "cash" ? "cash" : "bank", idempotencyKey: key(f) }); },
+  "tax.file": async (c, f) => { await ct.markReturnFiled(c, { year: n(f, "year"), reference: s(f, "reference") }); },
+  "asset.add": async (c, f) => { await fa.registerAsset(c, { name: s(f, "name"), category: s(f, "category"), cost: s(f, "cost"), vat: o(f, "vat"), residual: o(f, "residual"), lifeMonths: n(f, "life"), purchaseDate: dt(f, "date"), paidFrom: s(f, "paidFrom") as "bank", vendor: o(f, "vendor"), location: o(f, "location"), serial: o(f, "serial") }); },
+  "asset.depreciate": async (c, f) => { await fa.runDepreciation(c, s(f, "period")); },
+  "asset.dispose": async (c, f) => { await fa.disposeAsset(c, { id: s(f, "id"), proceeds: s(f, "proceeds"), method: s(f, "method") === "cash" ? "cash" : "bank" }); },
+  "exp.add": async (c, f) => { await exp.recordExpense(c, { date: od(f, "date"), category: s(f, "category"), vendor: s(f, "vendor"), reference: o(f, "reference"), description: s(f, "description"), net: s(f, "net"), vatRate: s(f, "vat") as "STD", paidFrom: s(f, "paidFrom") as "bank", treatment: s(f, "treatment") as "deductible", idempotencyKey: key(f) }); },
+
   // ---------- insurance ----------
   "ins.payer": async (c, f) => { await ins.createPayer(c, { name: s(f, "name"), code: s(f, "code"), kind: s(f, "kind") as "insurer" | "tpa" }); },
   "ins.plan": async (c, f) => { await ins.createPlan(c, { payerId: s(f, "payerId"), name: s(f, "name"), copayPct: n(f, "copayPct"), copayCapPerVisit: o(f, "cap"), preauthServiceCodes: list(f, "preauth"), exclusions: list(f, "exclusions") }); },

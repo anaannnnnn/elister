@@ -6,6 +6,7 @@
 import { MongoMemoryReplSet } from "mongodb-memory-server";
 import { spawn } from "node:child_process";
 import path from "node:path";
+import fs from "node:fs";
 
 const port = process.env.PORT ?? "3000";
 const mode = process.argv[2] === "start" ? "start" : "dev";
@@ -20,8 +21,24 @@ async function main() {
     FIELD_ENCRYPTION_KEY: process.env.FIELD_ENCRYPTION_KEY ?? Buffer.from("0123456789abcdef0123456789abcdef").toString("base64"),
     DISPLAY_KEY: process.env.DISPLAY_KEY ?? "local-display-key",
   });
-  const { seedAll } = await import("./seed");
-  await seedAll({ activity: true });
+  const cache = path.resolve(".seed-cache/year");
+  if (process.argv.includes("--year") && fs.existsSync(path.join(cache, "_meta.json"))) {
+    // load the one-year dataset built by `npm run seed:year` (instant; data is discarded when you stop)
+    const { MongoClient, BSON } = await import("mongodb");
+    const c = await new MongoClient(rs.getUri()).connect();
+    const db = c.db("healthos_dev");
+    for (const f of fs.readdirSync(cache).filter((x) => x.endsWith(".ejson"))) {
+      const docs = fs.readFileSync(path.join(cache, f), "utf8").split("\n").filter(Boolean).map((l) => BSON.EJSON.parse(l, { relaxed: false }) as import("mongodb").Document);
+      for (let i = 0; i < docs.length; i += 1000) await db.collection(f.replace(".ejson", "")).insertMany(docs.slice(i, i + 1000));
+    }
+    await c.close();
+    const { ensureIndexes } = await import("../src/core/db");
+    await ensureIndexes();
+    console.log("Loaded one-year dataset from .seed-cache/year");
+  } else {
+    const { seedAll } = await import("./seed");
+    await seedAll({ activity: true });
+  }
   const nextBin = path.resolve("node_modules/next/dist/bin/next");
   const next = spawn(process.execPath, [nextBin, mode, "-p", port], { env: process.env, stdio: "inherit" });
   const stop = async () => { next.kill(); await rs.stop(); process.exit(0); };

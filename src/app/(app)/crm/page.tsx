@@ -1,5 +1,6 @@
 import { requireCtx } from "@/lib/session";
-import { Alert, Badge, Card, NoAccess, PageHeader, Stat, Table, Tabs } from "@/ui/kit";
+import { Alert, Badge, Card, NoAccess, Stat, Table, Tabs } from "@/ui/kit";
+import { BrandBanner } from "@/ui/brand";
 import { ActionButton, ActionForm, fmtDateTime } from "@/ui/forms";
 import { buildRecallList, listComplaints, listDueFollowUps, listEnquiries, referralAnalysis, satisfactionSummary } from "@/modules/crm/service";
 import { contactInfo } from "@/modules/patients/service";
@@ -17,7 +18,7 @@ export default async function CrmPage({ searchParams }: { searchParams: Promise<
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Patient CRM" sub="Enquiries, follow-ups, recall and feedback. CRM staff see contact details only, never clinical records." />
+      <BrandBanner eyebrow="Patient CRM" title="Enquiries, follow-ups, recall and feedback"><p className="text-xs text-white/70">CRM staff see contact details only, never clinical records.</p></BrandBanner>
       {sp.error && <Alert>{sp.error}</Alert>}
       <Tabs tabs={TABS} active={tab} base="/crm" />
       {tab === "enquiries" && <Enquiries ctx={ctx} back={back} can={can} />}
