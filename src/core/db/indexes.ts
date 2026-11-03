@@ -13,7 +13,7 @@ export const INDEXES: Idx[] = [
 INDEXES.push(
   ["appointments", { orgId: 1, doctorId: 1, start: 1 }],
   ["appointments", { orgId: 1, patientId: 1, start: -1 }],
-  ["slot_locks", { orgId: 1, doctorId: 1, day: 1 }, { unique: true }],
+  ["slot_locks", { orgId: 1, key: 1 }, { unique: true }],
   ["time_off", { orgId: 1, doctorId: 1, start: 1 }],
 );
 

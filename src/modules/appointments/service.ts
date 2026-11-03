@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { ClientSession } from "mongodb";
-import { tenantCol, withTransaction, getDb } from "@/core/db";
+import { tenantCol, withTransaction } from "@/core/db";
+import { precreateLock as preLock, bumpLock } from "@/core/locks";
 import { audit } from "@/core/audit";
 import { emit } from "@/core/outbox";
 import { newId } from "@/core/ids";
@@ -22,25 +23,10 @@ const BookInput = z.object({
 });
 export type BookInput = z.input<typeof BookInput>;
 
-/**
- * Serialises concurrent bookings for one doctor-day: every booking txn writes this doc,
- * so concurrent txns conflict, one retries, and its overlap check then sees the winner.
- */
-async function lockDoctorDay(ctx: Ctx, doctorId: string, start: Date, s: ClientSession) {
-  const db = await getDb();
-  await db
-    .collection("slot_locks")
-    .updateOne({ orgId: ctx.orgId, doctorId, day: dubaiParts(start).ymd }, { $inc: { v: 1 } }, { session: s });
-}
-/** Created outside the txn so the first concurrent upsert race cannot hit a duplicate key. */
-async function precreateLock(ctx: Ctx, doctorId: string, start: Date) {
-  const db = await getDb();
-  try {
-    await db.collection("slot_locks").insertOne({ orgId: ctx.orgId, doctorId, day: dubaiParts(start).ymd, v: 0 });
-  } catch (e) {
-    if ((e as { code?: number }).code !== 11000) throw e;
-  }
-}
+const lockKey = (doctorId: string, start: Date) => `doctor-day:${doctorId}:${dubaiParts(start).ymd}`;
+/** Serialises concurrent bookings for one doctor-day (see core/locks). */
+const lockDoctorDay = (ctx: Ctx, doctorId: string, start: Date, s: ClientSession) => bumpLock(ctx.orgId, lockKey(doctorId, start), s);
+const precreateLock = (ctx: Ctx, doctorId: string, start: Date) => preLock(ctx.orgId, lockKey(doctorId, start));
 
 export async function bookAppointment(ctx: Ctx, input: BookInput): Promise<Appointment> {
   assertPermission(ctx, "appointments:create");

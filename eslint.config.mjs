@@ -18,6 +18,7 @@ const eslintConfig = defineConfig([
     rules: { "@typescript-eslint/no-explicit-any": "off" },
   },
   {
+    ignores: ["**/*.test.ts"],
     files: ["src/modules/**/*.{ts,tsx}", "src/app/**/*.{ts,tsx}", "src/ui/**/*.{ts,tsx}"],
     rules: {
       "no-restricted-imports": ["error", {
