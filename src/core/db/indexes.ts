@@ -34,6 +34,14 @@ INDEXES.push(
   ["charges", { orgId: 1, encounterId: 1, autoKey: 1 }, { unique: true, partialFilterExpression: { autoKey: { $type: "string" } } }],
 );
 
+INDEXES.push(
+  ["journal_entries", { orgId: 1, idempotencyKey: 1 }, { unique: true }],
+  ["journal_entries", { orgId: 1, entryNo: 1 }, { unique: true }],
+  ["journal_reversals", { orgId: 1, entryId: 1 }, { unique: true }],
+  ["gl_lines", { orgId: 1, accountId: 1, date: 1 }],
+  ["gl_lines", { orgId: 1, entryId: 1 }],
+);
+
 export async function ensureIndexes(): Promise<void> {
   const db = await getDb();
   for (const [name, keys, opts] of INDEXES) await db.collection(name).createIndex(keys, opts);

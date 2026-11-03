@@ -10,6 +10,7 @@ export interface TenantCollection<T extends Document> {
   find(filter?: Filter<T>, opts?: FindOptions & { sort?: Sort; limit?: number; skip?: number; session?: ClientSession }): Promise<WithOrg<T>[]>;
   findOne(filter: Filter<T>, s?: ClientSession): Promise<WithOrg<T> | null>;
   insertOne(doc: T, s?: ClientSession): Promise<void>;
+  insertMany(docs: T[], s?: ClientSession): Promise<void>;
   updateOne(filter: Filter<T>, update: UpdateFilter<T>, s?: ClientSession, opts?: { upsert?: boolean }): Promise<UpdateResult>;
   findOneAndUpdate(filter: Filter<T>, update: UpdateFilter<T>, opts?: { sort?: Sort }, s?: ClientSession): Promise<WithOrg<T> | null>;
   count(filter: Filter<T>, s?: ClientSession): Promise<number>;
@@ -29,6 +30,9 @@ export function tenantCol<T extends Document = Document>(orgId: string, name: st
     },
     async insertOne(doc, s) {
       await (await col()).insertOne({ ...(doc as object), orgId }, { session: s });
+    },
+    async insertMany(docs, s) {
+      if (docs.length) await (await col()).insertMany(docs.map((d) => ({ ...(d as object), orgId })), { session: s });
     },
     async updateOne(filter, update, s, opts) {
       // forbid rewriting orgId
