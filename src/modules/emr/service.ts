@@ -10,6 +10,7 @@ import { transitionAppointment } from "@/modules/appointments/service";
 import type { Appointment, Staff } from "@/modules/appointments/schema";
 import { markTokenStarted, markTokenDone } from "@/modules/queue/service";
 import { getPatient } from "@/modules/patients/service";
+import { ensureConsultationCharge } from "@/modules/billing/charges";
 import { DiagnosisInput, Soap, VitalsInput, type Encounter, type Note } from "./schema";
 
 const enc = (orgId: string) => tenantCol<Encounter>(orgId, "encounters");
@@ -197,6 +198,7 @@ export async function completeEncounter(ctx: Ctx, encounterId: string): Promise<
     await transitionAppointment(ctx, e.appointmentId, "completed", s);
     await markTokenDone(ctx, e.appointmentId, s);
     await enc(ctx.orgId).updateOne({ _id: encounterId, status: "open" } as never, { $set: { status: "completed", completedAt: new Date() } } as never, s);
+    await ensureConsultationCharge(ctx, e, s);
     await audit(s, { orgId: ctx.orgId, actorId: ctx.userId, action: "encounter.complete", resource: "encounter", resourceId: encounterId });
     await emit(s, ctx.orgId, "encounter.completed", { encounterId });
     return { ...e, status: "completed" as const, completedAt: new Date() };

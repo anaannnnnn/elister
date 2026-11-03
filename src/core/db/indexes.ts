@@ -29,6 +29,11 @@ INDEXES.push(
   ["notes", { orgId: 1, encounterId: 1, version: 1 }, { unique: true }],
 );
 
+INDEXES.push(
+  ["charges", { orgId: 1, patientId: 1, status: 1 }],
+  ["charges", { orgId: 1, encounterId: 1, autoKey: 1 }, { unique: true, partialFilterExpression: { autoKey: { $type: "string" } } }],
+);
+
 export async function ensureIndexes(): Promise<void> {
   const db = await getDb();
   for (const [name, keys, opts] of INDEXES) await db.collection(name).createIndex(keys, opts);
