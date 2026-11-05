@@ -31,6 +31,13 @@ export type Claim = {
 export type Remittance = { _id: string; payerId: string; reference: string; lines: { claimId: string; paid: Decimal128; denied: Decimal128; reason?: string }[]; total: Decimal128; journalEntryId: string; at: Date; by: string };
 
 const claims = (orgId: string) => tenantCol<Claim>(orgId, "claims");
+
+/** DHA eClaimLink when the organisation has enabled it (mock, test or production), otherwise the sandbox adapter. */
+async function pickAdapter(ctx: Ctx, payerId: string) {
+  const cfg = await tenantCol<{ mode: "off" | "mock" | "test" | "production" }>(ctx.orgId, "eclaimlink_config").findOne({ key: "main" } as never);
+  if (cfg && cfg.mode !== "off") return (await import("@/modules/integrations/eclaimlink/service")).eclaimlinkAdapter(ctx, cfg.mode);
+  return adapterFor(payerId);
+}
 const v2 = (d: Decimal128 | undefined) => fromDecimal128(d).toFixed(2);
 
 async function loadClaim(ctx: Ctx, id: string, s?: ClientSession): Promise<Claim> {
@@ -141,7 +148,7 @@ export async function submitClaim(ctx: Ctx, claimId: string): Promise<Claim> {
   assertPermission(ctx, "insurance:update");
   const c = await loadClaim(ctx, claimId);
   if (c.status !== "validated") throw new AppError("CONFLICT", "Only validated claims can be submitted");
-  const adapter = adapterFor(c.payerId);
+  const adapter = await pickAdapter(ctx, c.payerId);
   const res = await adapter.submit({
     number: c.number, version: c.version, payerId: c.payerId, total: v2(c.total),
     items: c.items.map((i) => ({ serviceCode: i.serviceCode, diagnosisCodes: i.diagnosisCodes, payerShare: v2(i.payerShare) })),

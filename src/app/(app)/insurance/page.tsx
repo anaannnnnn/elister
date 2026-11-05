@@ -9,11 +9,12 @@ import { patientNames } from "@/modules/patients/service";
 import { listUnbilledCharges } from "@/modules/billing/charges";
 import { listPolicies } from "@/modules/insurance/masters";
 import { PatientPicker } from "../appointments/PatientPicker";
+import { EclaimTab } from "./EclaimTab";
 
-const TABS = [{ key: "claims", label: "Claims" }, { key: "setup", label: "Payers & plans" }, { key: "patient", label: "Insure a visit" }, { key: "preauth", label: "Pre-authorisation" }, { key: "recon", label: "Reconciliation" }];
+const TABS = [{ key: "claims", label: "Claims" }, { key: "setup", label: "Payers & plans" }, { key: "patient", label: "Insure a visit" }, { key: "preauth", label: "Pre-authorisation" }, { key: "recon", label: "Reconciliation" }, { key: "ecl", label: "DHA eClaimLink" }];
 const TONE: Record<string, "neutral" | "ok" | "warn" | "danger" | "info"> = { draft: "neutral", validated: "info", submitted: "info", accepted: "ok", rejected: "danger", partially_paid: "warn", paid: "ok", written_off: "neutral" };
 
-export default async function InsurancePage({ searchParams }: { searchParams: Promise<{ tab?: string; error?: string; patientId?: string }> }) {
+export default async function InsurancePage({ searchParams }: { searchParams: Promise<{ tab?: string; error?: string; notice?: string; patientId?: string }> }) {
   const ctx = await requireCtx();
   const sp = await searchParams;
   if (!ctx.permissions.includes("insurance:view")) return <NoAccess what="insurance" />;
@@ -25,8 +26,9 @@ export default async function InsurancePage({ searchParams }: { searchParams: Pr
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Insurance" sub="Eligibility, pre-authorisation, claims and remittance. Submission uses a SANDBOX connector: nothing is sent to any payer or regulator." />
+      <PageHeader title="Insurance" sub="Eligibility, pre-authorisation, claims and remittance. Submission uses the SANDBOX connector unless DHA eClaimLink (mock, test or production) is enabled on the eClaimLink tab." />
       {sp.error && <Alert>{sp.error}</Alert>}
+      {sp.notice && <Alert tone="ok">{sp.notice}</Alert>}
       <Tabs tabs={TABS} active={tab} base="/insurance" />
 
       {tab === "claims" && <Claims ctx={ctx} />}
@@ -49,6 +51,8 @@ export default async function InsurancePage({ searchParams }: { searchParams: Pr
       {tab === "preauth" && <Preauths ctx={ctx} back={back} />}
 
       {tab === "recon" && <Recon ctx={ctx} pname={pname} />}
+
+      {tab === "ecl" && <EclaimTab ctx={ctx} back={back} />}
     </div>
   );
 }
@@ -105,7 +109,7 @@ async function Preauths({ ctx, back }: { ctx: C; back: string }) {
     <Card title="Pre-authorisations">
       <Table head={["Patient", "Services", "Estimate", "Status", ""]} empty={rows.length ? undefined : "None."}>
         {rows.map((p) => <tr key={p._id}><td>{names.get(p.patientId)?.fullName}</td><td className="text-xs">{p.serviceCodes.join(", ")}</td><td>{aed(fromDecimal128(p.estimatedAmount).toFixed(2))}</td><td><Badge tone={p.status === "approved" ? "ok" : p.status === "rejected" ? "danger" : "warn"}>{p.status}</Badge>{p.reference && <span className="ms-1 text-xs text-muted">{p.reference}</span>}</td>
-          <td>{p.status === "requested" && ctx.permissions.includes("insurance:approve") && <ActionForm inline action="ins.preauthDecide" back={back} hidden={{ id: p._id }} submit="Decide" variant="outline" fields={[{ name: "decision", label: "Decision", type: "select", options: ["approve", "reject"] }, { name: "reference", label: "Payer ref." }]} />}</td></tr>)}
+          <td>{p.status === "requested" && ctx.permissions.includes("insurance:approve") && <><ActionButton action="ecl.preauthSend" back={back} hidden={{ id: p._id }} variant="ghost">Send to eClaimLink</ActionButton><ActionForm inline action="ins.preauthDecide" back={back} hidden={{ id: p._id }} submit="Decide" variant="outline" fields={[{ name: "decision", label: "Decision", type: "select", options: ["approve", "reject"] }, { name: "reference", label: "Payer ref." }]} /></>}</td></tr>)}
       </Table>
       {ctx.permissions.includes("insurance:create") && <div className="mt-3 border-t border-border pt-3"><p className="mb-2 text-xs text-muted">Request for a patient (use the patient and policy IDs from the Insure a visit tab):</p><ActionForm action="ins.preauthRequest" back={back} submit="Request" fields={[{ name: "patientId", label: "Patient ID", required: true }, { name: "policyId", label: "Policy ID", required: true }, { name: "codes", label: "Service codes", required: true }, { name: "amount", label: "Estimated AED", required: true }]} /></div>}
     </Card>

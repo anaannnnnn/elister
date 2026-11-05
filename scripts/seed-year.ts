@@ -124,6 +124,7 @@ async function main() {
   for (const d of D.NEW_DOCTORS)
     await upsert("staff", { userKey: d.userKey }, { _id: `${ORG}:${d.userKey}`, userKey: d.userKey, userId: `seed-dr-${d.userKey.split(".")[1]}`, name: d.name, nameAr: d.nameAr, departmentId: `${ORG}:${d.dept}`, branchId: BRANCH, specialty: d.specialty, role: "doctor", slotMinutes: 20, workDays: d.days, workStart: "09:00", workEnd: "21:00", active: true });
   type Staff = { _id: string; userKey: string; userId: string; name: string; departmentId: string };
+  for (const d of [...D.NEW_DOCTORS.map((x) => [x.userKey, x.licence] as const), ...Object.entries(D.DOCTOR_LICENCES)]) await db.collection("staff").updateOne({ orgId: ORG, userKey: d[0] }, { $set: { licenceNo: d[1] } });
   const staff = await tenantCol<Staff>(ORG, "staff").find({ role: "doctor" } as never);
   const docByDept: Record<string, Staff[]> = {};
   for (const s of staff) (docByDept[s.departmentId.split(":").pop()!] ??= []).push(s);

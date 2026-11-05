@@ -16,7 +16,8 @@
     "seed:year": "tsx scripts/seed-year.ts",
     "seed:year:push": "tsx scripts/seed-year-push.ts",
     "seed:year:verify": "tsx scripts/year/verify.ts",
-    "seed:year:tax": "tsx scripts/seed-year-tax.ts"
+    "seed:year:tax": "tsx scripts/seed-year-tax.ts",
+    "mock:dha": "tsx scripts/mock-dha.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.105.3",

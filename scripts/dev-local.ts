@@ -17,7 +17,7 @@ async function main() {
     MONGODB_URI: rs.getUri(),
     MONGODB_DB: "healthos_dev",
     AUTH_SECRET: process.env.AUTH_SECRET ?? "local-dev-secret-local-dev-secret-0123456789",
-    BETTER_AUTH_URL: `http://localhost:${port}`,
+    BETTER_AUTH_URL: process.env.BETTER_AUTH_URL ?? `http://localhost:${port}`,
     FIELD_ENCRYPTION_KEY: process.env.FIELD_ENCRYPTION_KEY ?? Buffer.from("0123456789abcdef0123456789abcdef").toString("base64"),
     DISPLAY_KEY: process.env.DISPLAY_KEY ?? "local-display-key",
   });

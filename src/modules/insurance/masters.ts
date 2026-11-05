@@ -13,7 +13,7 @@ export type Plan = {
   annualLimit?: Decimal128; preauthServiceCodes: string[]; exclusions: string[]; active: boolean;
 };
 export type Policy = { _id: string; patientId: string; planId: string; payerId: string; memberNo: string; startDate: Date; endDate: Date; active: boolean };
-export type Eligibility = { _id: string; patientId: string; policyId: string; result: "eligible" | "not_eligible" | "unknown"; source: "manual" | "sandbox"; reference?: string; notes?: string; at: Date; by: string };
+export type Eligibility = { _id: string; patientId: string; policyId: string; result: "eligible" | "not_eligible" | "unknown"; source: "manual" | "sandbox" | "eclaimlink"; reference?: string; notes?: string; at: Date; by: string };
 export type Preauth = {
   _id: string; patientId: string; policyId: string; serviceCodes: string[]; estimatedAmount: Decimal128; status: "requested" | "approved" | "rejected";
   approvedAmount?: Decimal128; reference?: string; requestedAt: Date; requestedBy: string; decidedAt?: Date; decidedBy?: string;
@@ -68,7 +68,7 @@ export async function createPolicy(ctx: Ctx, input: { patientId: string; planId:
 /** Records the outcome of an eligibility check. Source is "manual" (staff verified with the payer) or "sandbox"; there is no live payer connection. */
 export async function recordEligibility(ctx: Ctx, input: { patientId: string; policyId: string; result: Eligibility["result"]; source: Eligibility["source"]; reference?: string; notes?: string }): Promise<Eligibility> {
   assertPermission(ctx, "insurance:create");
-  const d = v(z.object({ patientId: z.string(), policyId: z.string(), result: z.enum(["eligible", "not_eligible", "unknown"]), source: z.enum(["manual", "sandbox"]), reference: z.string().optional(), notes: z.string().optional() }).safeParse(input));
+  const d = v(z.object({ patientId: z.string(), policyId: z.string(), result: z.enum(["eligible", "not_eligible", "unknown"]), source: z.enum(["manual", "sandbox", "eclaimlink"]), reference: z.string().optional(), notes: z.string().optional() }).safeParse(input));
   const pol = await tenantCol<Policy>(ctx.orgId, "policies").findOne({ _id: d.policyId, patientId: d.patientId } as never);
   if (!pol) throw new AppError("NOT_FOUND", "Policy not found for this patient");
   return insert<Eligibility>(ctx, "eligibility_checks", { _id: newId(), ...d, at: new Date(), by: ctx.userId }, "eligibility.record");

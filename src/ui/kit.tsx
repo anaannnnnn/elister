@@ -101,7 +101,7 @@ export function PageHeader({ title, sub, actions, eyebrow }: { title: ReactNode;
     <div className="page-in mb-5 flex flex-wrap items-end justify-between gap-3">
       <div className="min-w-0">
         {eyebrow && <div className="mb-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">{eyebrow}</div>}
-        <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-primary-strong dark:text-fg">{title}</h1>
         {sub && <p className="mt-1 max-w-3xl text-sm text-muted">{sub}</p>}
       </div>
       <div className="flex items-center gap-2">{actions}</div>

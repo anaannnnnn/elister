@@ -1,5 +1,6 @@
 import type { Ctx } from "@/core/rbac/authorize";
 import { AppError } from "@/core/errors";
+import * as ecl from "@/modules/integrations/eclaimlink/service";
 import * as ct from "@/modules/tax/corporateTax";
 import * as fa from "@/modules/assets/service";
 import * as exp from "@/modules/finance/expenses";
@@ -50,6 +51,17 @@ export const ACTIONS: Record<string, Act> = {
   "asset.depreciate": async (c, f) => { await fa.runDepreciation(c, s(f, "period")); },
   "asset.dispose": async (c, f) => { await fa.disposeAsset(c, { id: s(f, "id"), proceeds: s(f, "proceeds"), method: s(f, "method") === "cash" ? "cash" : "bank" }); },
   "exp.add": async (c, f) => { await exp.recordExpense(c, { date: od(f, "date"), category: s(f, "category"), vendor: s(f, "vendor"), reference: o(f, "reference"), description: s(f, "description"), net: s(f, "net"), vatRate: s(f, "vat") as "STD", paidFrom: s(f, "paidFrom") as "bank", treatment: s(f, "treatment") as "deductible", idempotencyKey: key(f) }); },
+
+  // ---------- DHA eClaimLink ----------
+  "ecl.config": async (c, f) => {
+    const map: Record<string, string> = {};
+    for (const line of list(f, "payerMap")) { const [k, v] = line.split("="); if (k && v) map[k.trim()] = v.trim(); }
+    await ecl.setEclConfig(c, { mode: s(f, "mode") as ecl.EclMode, baseUrl: s(f, "baseUrl"), facilityId: s(f, "facilityId"), login: s(f, "login"), password: o(f, "password"), payerMap: map });
+  },
+  "ecl.test": async (c, _f, back) => { const r = await ecl.testConnection(c); return `${back}${back.includes("?") ? "&" : "?"}${r.ok ? "notice" : "error"}=${encodeURIComponent(r.message)}`; },
+  "ecl.poll": async (c, _f, back) => { const r = await ecl.pollInbox(c); return `${back}${back.includes("?") ? "&" : "?"}notice=${encodeURIComponent(`${r.found} new: ${r.claimsPaid} paid, ${r.claimsPartial} part-paid, ${r.claimsDenied} denied, AED ${r.amountPaid} received, ${r.authApproved} approvals, ${r.authRefused} refusals${r.problems.length ? `. Problems: ${r.problems.join("; ")}` : ""}`)}`; },
+  "ecl.preauthSend": async (c, f) => { await ecl.sendPriorAuth(c, s(f, "id")); },
+  "ecl.eligibility": async (c, f, back) => { const r = await ecl.checkEligibilityEcl(c, s(f, "policyId")); return `${back}${back.includes("?") ? "&" : "?"}notice=${encodeURIComponent(`${r.eligible ? "Eligible" : "Not eligible"}: ${r.notes} (${r.reference})`)}`; },
 
   // ---------- insurance ----------
   "ins.payer": async (c, f) => { await ins.createPayer(c, { name: s(f, "name"), code: s(f, "code"), kind: s(f, "kind") as "insurer" | "tpa" }); },

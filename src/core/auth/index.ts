@@ -12,6 +12,7 @@ function build() {
   return betterAuth({
     database: mongodbAdapter(getDbLazy()),
     secret: process.env.AUTH_SECRET,
+    trustedOrigins: (process.env.TRUSTED_ORIGINS ?? "").split(",").map((x) => x.trim()).filter(Boolean),
     emailAndPassword: { enabled: true, minPasswordLength: 12, autoSignIn: true },
     session: { expiresIn: 60 * 60 * 8, updateAge: 60 * 15, cookieCache: { enabled: false } },
     plugins: [twoFactor({ issuer: "Elister Med" }), nextCookies()],
