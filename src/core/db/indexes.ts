@@ -138,3 +138,15 @@ INDEXES.push(
   ["patients", { orgId: 1, emiratesIdHash: 1 }],
   ["patients", { orgId: 1, fullName: 1, dob: 1 }],
 );
+
+INDEXES.push(
+  ["customers", { orgId: 1, name: 1 }],
+  ["sales_docs", { orgId: 1, number: 1 }, { unique: true }],
+  ["trade_invoices", { orgId: 1, number: 1 }, { unique: true }],
+  ["trade_invoices", { orgId: 1, idempotencyKey: 1 }, { unique: true, partialFilterExpression: { idempotencyKey: { $type: "string" } } }],
+  ["trade_invoices", { orgId: 1, customerId: 1, status: 1 }],
+  ["trade_receipts", { orgId: 1, idempotencyKey: 1 }, { unique: true }],
+  ["trade_credit_notes", { orgId: 1, idempotencyKey: 1 }, { unique: true }],
+  ["vendor_credits", { orgId: 1, idempotencyKey: 1 }, { unique: true }],
+  ["recurring_invoices", { orgId: 1, status: 1, nextDate: 1 }],
+);

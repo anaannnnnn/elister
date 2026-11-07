@@ -4,6 +4,9 @@ import * as ecl from "@/modules/integrations/eclaimlink/service";
 import * as ct from "@/modules/tax/corporateTax";
 import * as fa from "@/modules/assets/service";
 import * as exp from "@/modules/finance/expenses";
+import * as bk from "@/modules/books/service";
+import * as coa from "@/modules/ledger/coa";
+import { postJournal } from "@/modules/ledger/journal";
 import * as ins from "@/modules/insurance/masters";
 import * as claims from "@/modules/insurance/claims";
 import * as inv from "@/modules/inventory/service";
@@ -51,6 +54,38 @@ export const ACTIONS: Record<string, Act> = {
   "asset.depreciate": async (c, f) => { await fa.runDepreciation(c, s(f, "period")); },
   "asset.dispose": async (c, f) => { await fa.disposeAsset(c, { id: s(f, "id"), proceeds: s(f, "proceeds"), method: s(f, "method") === "cash" ? "cash" : "bank" }); },
   "exp.add": async (c, f) => { await exp.recordExpense(c, { date: od(f, "date"), category: s(f, "category"), vendor: s(f, "vendor"), reference: o(f, "reference"), description: s(f, "description"), net: s(f, "net"), vatRate: s(f, "vat") as "STD", paidFrom: s(f, "paidFrom") as "bank", treatment: s(f, "treatment") as "deductible", idempotencyKey: key(f) }); },
+
+  // ---------- business books: corporate customers, documents, receipts, credits, banking, chart of accounts ----------
+  "bk.customer": async (c, f) => { await bk.createCustomer(c, { name: s(f, "name"), trn: o(f, "trn"), email: o(f, "email"), phone: o(f, "phone"), termsDays: on(f, "terms") ?? 30 }); },
+  "bk.docCreate": async (c, f) => { await bk.createSalesDoc(c, { kind: s(f, "kind") as bk.DocKind, customerId: s(f, "customerId"), date: od(f, "date"), lines: bk.parseLines(s(f, "lines"), "4500"), notes: o(f, "notes") }); },
+  "bk.docStatus": async (c, f) => { await bk.setSalesDocStatus(c, s(f, "id"), s(f, "status") as "sent"); },
+  "bk.docConvert": async (c, f) => { await bk.convertSalesDoc(c, s(f, "id"), s(f, "to") as "invoice"); },
+  "bk.invCreate": async (c, f) => { await bk.createInvoice(c, { customerId: s(f, "customerId"), issueDate: od(f, "date"), dueDate: od(f, "due"), lines: bk.parseLines(s(f, "lines"), "4500"), notes: o(f, "notes"), issue: b(f, "issue"), idempotencyKey: key(f) }); },
+  "bk.invIssue": async (c, f) => { await bk.issueInvoice(c, s(f, "id")); },
+  "bk.invVoid": async (c, f) => { await bk.voidInvoice(c, s(f, "id"), s(f, "reason")); },
+  "bk.receipt": async (c, f) => { await bk.recordReceipt(c, { customerId: s(f, "customerId"), invoiceId: o(f, "invoiceId"), amount: s(f, "amount"), method: s(f, "method") as "bank", reference: o(f, "reference"), date: od(f, "date"), idempotencyKey: key(f) }); },
+  "bk.applyCredit": async (c, f) => { await bk.applyCredit(c, { source: s(f, "source") as "receipt", sourceId: s(f, "sourceId"), invoiceId: s(f, "invoiceId") }); },
+  "bk.creditNote": async (c, f) => { await bk.issueTradeCreditNote(c, { customerId: s(f, "customerId"), invoiceId: o(f, "invoiceId"), lines: bk.parseLines(s(f, "lines"), "4500"), reason: s(f, "reason"), idempotencyKey: key(f) }); },
+  "bk.recCreate": async (c, f) => { await bk.createRecurring(c, { name: s(f, "name"), customerId: s(f, "customerId"), frequency: s(f, "frequency") as "monthly", startDate: dt(f, "start"), lines: bk.parseLines(s(f, "lines"), "4500") }); },
+  "bk.recStatus": async (c, f) => { await bk.setRecurringStatus(c, s(f, "id"), s(f, "status") as "active"); },
+  "bk.recGenerate": async (c, f) => { await bk.generateRecurring(c, s(f, "id")); },
+  "bk.recRunDue": async (c, _f, back) => { const n2 = await bk.runDueRecurring(c); return `${back}${back.includes("?") ? "&" : "?"}notice=${encodeURIComponent(`${n2} recurring invoice(s) generated`)}`; },
+  "bk.vendorCredit": async (c, f) => { await bk.recordVendorCredit(c, { supplierId: s(f, "supplierId"), supplierInvoiceId: o(f, "supplierInvoiceId"), lines: bk.parseLines(s(f, "lines"), "5800"), reason: s(f, "reason"), idempotencyKey: key(f) }); },
+  "bk.bank": async (c, f) => { await bk.bankTransaction(c, { type: s(f, "type") as "deposit", account: s(f, "account") as "bank", otherCode: s(f, "other"), amount: s(f, "amount"), date: od(f, "date"), description: s(f, "description"), idempotencyKey: key(f) }); },
+  "bk.lockThrough": async (c, f, back) => { const k = await bk.lockThrough(c, n(f, "year"), n(f, "month")); return `${back}${back.includes("?") ? "&" : "?"}notice=${encodeURIComponent(`${k} period(s) locked`)}`; },
+  "coa.add": async (c, f) => { await coa.createAccount(c, { code: s(f, "code"), name: s(f, "name"), type: s(f, "type") as "asset" }); },
+  "coa.rename": async (c, f) => { await coa.renameAccount(c, s(f, "code"), s(f, "name")); },
+  "coa.active": async (c, f) => { await coa.setAccountActive(c, s(f, "code"), s(f, "active") === "1"); },
+  "journal.manual": async (c, f) => {
+    // one line per row: "account code | debit | credit"
+    const k = key(f);
+    const lines = s(f, "lines").split("\n").map((x) => x.trim()).filter(Boolean).map((row) => {
+      const [code, d, cr] = row.split("|").map((x) => x.trim());
+      if (!/^\d{4}$/.test(code ?? "")) throw new AppError("VALIDATION", `"${row}": start with a 4-digit account code`);
+      return { accountId: `${c.orgId}:${code}`, debit: d || undefined, credit: cr || undefined };
+    });
+    await postJournal(c, { date: od(f, "date") ?? new Date(), memo: s(f, "memo"), lines, sourceRef: { type: "manual", id: k }, idempotencyKey: `manual:${k}` });
+  },
 
   // ---------- DHA eClaimLink ----------
   "ecl.config": async (c, f) => {

@@ -12,7 +12,7 @@ type Item = { href: string; label: string; icon: keyof typeof ICONS };
 const GROUP_OF: Record<string, string> = {
   "/dashboard": "Overview", "/portal": "Overview",
   "/patients": "Clinical", "/appointments": "Clinical", "/queue": "Clinical", "/laboratory": "Clinical", "/radiology": "Clinical", "/pharmacy": "Clinical", "/hospital": "Clinical",
-  "/billing": "Revenue", "/insurance": "Revenue", "/accounting": "Finance", "/finance": "Finance", "/tax": "Finance", "/procurement": "Operations", "/inventory": "Operations",
+  "/billing": "Revenue", "/insurance": "Revenue", "/accounting": "Finance", "/finance": "Finance", "/tax": "Finance", "/books": "Finance", "/procurement": "Operations", "/inventory": "Operations",
   "/hr": "People", "/crm": "People", "/communications": "People",
   "/compliance": "Platform", "/ai": "Platform", "/settings/security": "Platform",
 };

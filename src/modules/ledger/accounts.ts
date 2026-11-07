@@ -53,6 +53,9 @@ export const DEFAULT_COA: Omit<Account, "_id" | "active">[] = [
   { code: "5950", name: "Bad Debt and Insurance Write-offs", type: "expense", normal: D, system: "writeoff" },
   { code: "1015", name: "Petty Cash", type: "asset", normal: D, system: "petty_cash" },
   { code: "1016", name: "Bank - Savings Account", type: "asset", normal: D, system: "bank_savings" },
+  { code: "1120", name: "Accounts Receivable - Corporate Clients", type: "asset", normal: D, system: "ar_trade" },
+  { code: "4500", name: "Corporate and Occupational Health Revenue", type: "income", normal: C, system: "rev_corporate" },
+  { code: "4800", name: "Other Income", type: "income", normal: C, system: "other_income" },
 ];
 
 export async function ensureChartOfAccounts(orgId: string): Promise<void> {

@@ -195,6 +195,8 @@ export async function startMockDha(opts: MockOptions = {}): Promise<MockDha> {
     req.on("end", () => {
       try {
         const url = (req.url ?? "").split("?")[0];
+        // Requests that came through Cloudflare carry cf-connecting-ip: the admin controls are local-only.
+        if (url.startsWith("/admin/") && req.headers["cf-connecting-ip"]) return send(403, { code: 1, message: "Admin endpoints are not available over the public address" });
         if (req.method === "GET" && url === "/admin/state") return send(200, { transactions: txs.map(({ xml, ...t }) => { void xml; return t; }), pending: pending.length });
         if (req.method === "POST" && url === "/admin/process") return send(200, { processed: process() });
         if (req.method === "POST" && url === "/admin/scenario") { const j = JSON.parse(data || "{}"); scenarios.set(j.id, j.outcome); return send(200, { ok: true }); }
