@@ -6,14 +6,14 @@ export const cn = clsx;
 
 export function Card({ title, action, children, className, flush }: { title?: ReactNode; action?: ReactNode; children: ReactNode; className?: string; flush?: boolean }) {
   return (
-    <section className={cn("panel overflow-hidden rounded-3xl", className)}>
+    <section className={cn("panel overflow-hidden rounded-[22px]", className)}>
       {(title || action) && (
-        <header className="flex items-center justify-between gap-3 px-6 pb-1 pt-5">
-          <h2 className="flex items-center gap-2.5 text-[15px] font-medium tracking-tight"><span aria-hidden className="size-2 rounded-full accent-grad" />{title}</h2>
+        <header className="flex items-center justify-between gap-3 border-b border-white/50 px-5 py-3.5 dark:border-white/10">
+          <h2 className="flex items-center gap-2.5 text-[15px] font-semibold tracking-tight"><span aria-hidden className="h-4 w-1 rounded-full accent-grad" />{title}</h2>
           {action}
         </header>
       )}
-      <div className={flush ? "" : "p-6 pt-4"}>{children}</div>
+      <div className={flush ? "" : "p-5"}>{children}</div>
     </section>
   );
 }
@@ -22,12 +22,12 @@ export function Stat({ label, value, hint, tone, icon, trend }: { label: string;
   const t = trend && trend.pct !== null ? trend : null;
   const good = t ? (t.goodWhen === "down" ? t.pct! <= 0 : t.pct! >= 0) : true;
   return (
-    <div className="stat-tile group relative overflow-hidden rounded-3xl border border-white/60 p-5 shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-pop)] dark:border-white/5">
+    <div className="stat-tile panel panel-hover group relative overflow-hidden rounded-[22px] p-5">
       <div className="flex items-start justify-between gap-2">
-        <div className="text-xs font-medium text-muted">{label}</div>
-        {icon && <span className="grid size-9 shrink-0 place-items-center rounded-full bg-surface/80 text-fg shadow-sm">{icon}</span>}
+        <div className="text-[13px] font-medium text-muted">{label}</div>
+        {icon && <span className="btn-gloss grid size-10 shrink-0 place-items-center rounded-2xl">{icon}</span>}
       </div>
-      <div className={cn("mt-3 text-[28px] font-medium leading-none tracking-tight tabular-nums", tone === "ok" && "text-ok", tone === "warn" && "text-warn", tone === "danger" && "text-danger")}>{value}</div>
+      <div className={cn("mt-3 text-[28px] font-semibold leading-none tracking-tight tabular-nums", tone === "ok" && "text-ok", tone === "warn" && "text-warn", tone === "danger" && "text-danger")}>{value}</div>
       <div className="mt-3 flex min-h-5 items-center gap-2 text-xs text-muted">
         {t && <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium", good ? "bg-ok/15 text-ok" : "bg-danger/15 text-danger")}>{t.pct! >= 0 ? <TrendingUp size={12} /> : <TrendingDown size={12} />}{Math.abs(t.pct!).toFixed(1)}%</span>}
         {hint}
@@ -41,7 +41,7 @@ export function Badge({ children, tone = "neutral" }: { children: ReactNode; ton
   return <span className={cn("inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium", t)}><span aria-hidden className="size-1.5 rounded-full bg-current opacity-80" />{children}</span>;
 }
 
-const field = "w-full rounded-2xl border border-transparent bg-surface-2 px-4 py-2.5 text-sm text-fg transition placeholder:text-muted/70 hover:bg-surface-2/70 hover:border-border focus:border-primary/50 focus:bg-surface focus:outline-none focus:ring-4 focus:ring-primary/15 disabled:opacity-60";
+const field = "w-full rounded-xl border border-white/80 bg-white/60 px-3.5 py-2.5 text-sm text-fg shadow-[inset_0_1px_2px_rgba(11,74,126,.06)] backdrop-blur transition placeholder:text-muted/70 hover:bg-white/80 focus:border-primary focus:bg-white/95 focus:outline-none focus:ring-4 focus:ring-primary/15 disabled:opacity-60 dark:border-white/10 dark:bg-white/[0.06] dark:hover:bg-white/10 dark:focus:bg-white/10";
 export const Input = (p: InputHTMLAttributes<HTMLInputElement>) => <input {...p} className={cn(field, p.className)} />;
 export const Select = (p: SelectHTMLAttributes<HTMLSelectElement>) => <select {...p} className={cn(field, "pe-8", p.className)} />;
 export const Textarea = (p: TextareaHTMLAttributes<HTMLTextAreaElement>) => <textarea {...p} className={cn(field, "min-h-24", p.className)} />;
@@ -58,17 +58,17 @@ export function Field({ label, children, hint }: { label: string; children: Reac
 
 export function Button({ variant = "primary", className, ...p }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "ghost" | "danger" | "outline" }) {
   const v = {
-    primary: "bg-fg text-bg shadow-[0_10px_22px_-12px_rgba(0,0,0,.55)] hover:opacity-90",
-    ghost: "text-fg hover:bg-surface-2",
-    outline: "border border-border bg-surface text-fg hover:border-fg/30 hover:bg-surface-2",
-    danger: "bg-danger text-white shadow-[0_10px_22px_-12px_rgba(194,65,47,.8)] hover:brightness-110",
+    primary: "btn-gloss",
+    ghost: "text-fg hover:bg-white/60 dark:hover:bg-white/10",
+    outline: "border border-white/80 bg-white/55 text-fg shadow-[inset_0_1px_0_rgba(255,255,255,.9)] backdrop-blur hover:bg-white/85 dark:border-white/10 dark:bg-white/[0.06] dark:shadow-none dark:hover:bg-white/10",
+    danger: "bg-danger text-white hover:brightness-95",
   }[variant];
-  return <button {...p} className={cn("inline-flex items-center justify-center gap-1.5 rounded-full px-5 py-2.5 text-sm font-medium transition-all active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50", v, className)} />;
+  return <button {...p} className={cn("inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-medium transition active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50", v, className)} />;
 }
 
 export function Table({ head, children, empty }: { head: string[]; children: ReactNode; empty?: string }) {
   return (
-    <div className="overflow-x-auto rounded-2xl border border-border/70 bg-surface/60">
+    <div className="overflow-x-auto rounded-2xl border border-white/70 bg-white/30 dark:border-white/10 dark:bg-white/[0.03]">
       <table className="w-full text-sm">
         <thead className="tint">
           <tr className="text-start">
@@ -77,7 +77,7 @@ export function Table({ head, children, empty }: { head: string[]; children: Rea
             ))}
           </tr>
         </thead>
-        <tbody className="[&>tr]:border-t [&>tr]:border-border/60 [&>tr]:transition-colors [&>tr:hover]:bg-primary/[0.06] [&>tr>td]:px-4 [&>tr>td]:py-3">{children}</tbody>
+        <tbody className="[&>tr]:border-t [&>tr]:border-white/60 dark:[&>tr]:border-white/10 [&>tr]:transition-colors [&>tr:hover]:bg-white/60 dark:[&>tr:hover]:bg-white/[0.07] [&>tr>td]:px-4 [&>tr>td]:py-3">{children}</tbody>
       </table>
       {empty && <p className="border-t border-border/70 px-3 py-8 text-center text-sm text-muted">{empty}</p>}
     </div>
@@ -100,7 +100,7 @@ export function PageHeader({ title, sub, actions, eyebrow }: { title: ReactNode;
     <div className="page-in mb-5 flex flex-wrap items-end justify-between gap-3">
       <div className="min-w-0">
         {eyebrow && <div className="mb-1 text-[11px] font-medium uppercase tracking-[0.16em] text-primary">{eyebrow}</div>}
-        <h1 className="text-[28px] font-medium leading-tight tracking-tight text-primary-strong">{title}</h1>
+        <h1 className="text-[26px] font-semibold leading-tight tracking-tight text-primary-strong">{title}</h1>
         {sub && <p className="mt-1 max-w-3xl text-sm text-muted">{sub}</p>}
       </div>
       <div className="flex items-center gap-2">{actions}</div>
@@ -123,10 +123,10 @@ export function NoAccess({ what = "this page" }: { what?: string }) {
 
 export function Tabs({ tabs, active, base = "" }: { tabs: { key: string; label: string }[]; active: string; base?: string }) {
   return (
-    <nav className="panel mb-1 inline-flex max-w-full flex-wrap gap-1 rounded-full p-1.5" aria-label="Sections">
+    <nav className="panel mb-1 flex max-w-full flex-wrap gap-1 rounded-2xl p-1.5" aria-label="Sections">
       {tabs.map((t) => (
         <a key={t.key} href={`${base}?tab=${t.key}`} aria-current={t.key === active ? "page" : undefined}
-          className={cn("rounded-full px-4 py-1.5 text-sm transition-all", t.key === active ? "brand-grad font-medium text-white shadow-[0_8px_18px_-10px_rgba(76,127,230,.9)]" : "text-muted hover:bg-surface-2 hover:text-fg")}>{t.label}</a>
+          className={cn("rounded-xl px-3.5 py-1.5 text-sm transition-all", t.key === active ? "btn-gloss font-medium" : "text-muted hover:bg-white/60 hover:text-fg dark:hover:bg-white/10")}>{t.label}</a>
       ))}
     </nav>
   );
@@ -148,7 +148,7 @@ export function BarList({ rows, empty = "No data in this period." }: { rows: { l
   );
 }
 
-const DONUT = ["#76a1f3", "#a79cf2", "#f2b79a", "#1aa8b4", "#4a5568", "#b9cdee"];
+const DONUT = ["#0b4a7e", "#0090c0", "#00a0a0", "#3bb8d0", "#7fd6e6", "#6f86c8"];
 /** Accessible donut chart with a legend. */
 export function Donut({ parts, centre }: { parts: { label: string; value: number; display: string }[]; centre?: ReactNode }) {
   const total = parts.reduce((a, p) => a + p.value, 0);
