@@ -33,7 +33,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const isPortal = ctx.roles.includes("patient_portal_user");
   const items = isPortal
     ? [{ href: "/portal", label: t(locale, "nav.portal"), icon: "portal" as const }]
-    : [...NAV.filter((n) => !n.portal && ctx.permissions.includes(n.perm)).map((n) => ({ href: n.href, label: t(locale, n.labelKey), icon: n.icon })), { href: "/chat", label: t(locale, "nav.chat"), icon: "team" as const }];
+    : NAV.filter((n) => !n.portal && ctx.permissions.includes(n.perm)).map((n) => ({ href: n.href, label: t(locale, n.labelKey), icon: n.icon }));
   const quick = [
     ctx.permissions.includes("patients:create") && { href: "/patients/new", label: t(locale, "patients.new") },
     ctx.permissions.includes("appointments:create") && { href: "/appointments", label: "Book appointment" },
@@ -44,7 +44,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       items={items} quick={quick} orgName={org?.name ?? "Organization"} branch={branch?.name ?? ""} userName={ctx.name}
       roles={ctx.roles.join(", ").replaceAll("_", " ")} locale={locale} dir={dirOf(locale)}
       labels={{ language: t(locale, "common.language"), signOut: t(locale, "common.signOut"), search: t(locale, "common.search") }}
-      setLocale={setLocale} signOut={signOut} unread={unread}
+      setLocale={setLocale} signOut={signOut} unread={unread} showChat={!isPortal}
     >
       <Suspense fallback={<div className="space-y-3"><Skeleton className="h-7 w-56" /><Skeleton className="h-32 w-full" /></div>}>{children}</Suspense>
     </Shell>

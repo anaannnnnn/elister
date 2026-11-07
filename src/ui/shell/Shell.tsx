@@ -7,6 +7,7 @@ import { Bell, Command, LogOut, Moon, Search, Sun } from "lucide-react";
 import { cn } from "@/ui/kit";
 import { ICONS, type IconKey } from "@/ui/shell/icons";
 import { Slide } from "@/ui/Slide";
+import { ChatDock } from "@/ui/shell/ChatDock";
 
 type Item = { href: string; label: string; icon: IconKey };
 
@@ -24,11 +25,11 @@ const isActive = (path: string, href: string) => path === href || path.startsWit
 const iconBtn = "grid size-10 place-items-center rounded-full bg-surface text-fg shadow-card transition hover:bg-surface-2";
 
 export function Shell({
-  items, quick, orgName, branch, userName, roles, locale, dir, labels, setLocale, signOut, unread, children,
+  items, quick, orgName, branch, userName, roles, locale, dir, labels, setLocale, signOut, unread, showChat, children,
 }: {
   items: Item[]; quick: { href: string; label: string }[]; orgName: string; branch: string; userName: string; roles: string;
   locale: string; dir: "ltr" | "rtl"; labels: { language: string; signOut: string; search: string };
-  setLocale: () => Promise<void>; signOut: () => Promise<void>; unread: number; children: ReactNode;
+  setLocale: () => Promise<void>; signOut: () => Promise<void>; unread: number; showChat?: boolean; children: ReactNode;
 }) {
   const path = usePathname();
   const [dark, setDark] = useState(false);
@@ -162,9 +163,10 @@ export function Shell({
           </div>
         </header>
         <MobileNav items={items} path={path} />
-        <main aria-busy={busy} className={cn("flex-1 px-4 pb-8 pt-3 transition-opacity duration-200 md:px-6 md:ps-3", busy && "opacity-60")}><div className="mx-auto max-w-[1480px]">{children}</div></main>
+        <main aria-busy={busy} className={cn("flex-1 px-4 pb-24 pt-3 transition-opacity duration-200 md:px-6 md:ps-3", busy && "opacity-60")}><div className="mx-auto max-w-[1480px]">{children}</div></main>
         <footer className="no-print px-6 py-4 text-center text-[11px] text-muted">Elister Med · Your Trusted Family Healthcare Partner in Dubai · Demo environment with synthetic data</footer>
       </div>
+      {showChat && <ChatDock />}
       {open && <Palette onClose={() => setOpen(false)} entries={[...items.map((i) => ({ href: i.href, label: i.label })), ...quick]} />}
     </div>
   );

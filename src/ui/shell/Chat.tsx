@@ -19,7 +19,10 @@ async function api<T>(url: string, body?: unknown): Promise<T> {
   return j as T;
 }
 
-export function Chat({ initial }: { initial: { me: string; channels: Chan[]; people: Person[] } }) {
+export type ChatData = { me: string; channels: Chan[]; people: Person[] };
+
+/** `split` shows the list and the conversation side by side (maximised dock); otherwise one at a time (small dock, phones). */
+export function Chat({ initial, split, onUnread }: { initial: ChatData; split: boolean; onUnread?: (n: number) => void }) {
   const [me] = useState(initial.me);
   const [channels, setChannels] = useState(initial.channels);
   const [people, setPeople] = useState(initial.people);
@@ -40,8 +43,8 @@ export function Chat({ initial }: { initial: { me: string; channels: Chan[]; peo
   const title = current?.kind === "dm" ? person.get(current.members?.find((m) => m !== me) ?? "")?.name ?? current.name : current?.name ?? "";
 
   const refreshList = useCallback(async () => {
-    try { const j = await api<{ channels: Chan[]; people: Person[] }>("/api/chat/channels"); setChannels(j.channels); setPeople(j.people); } catch { /* keep what is shown */ }
-  }, []);
+    try { const j = await api<{ channels: Chan[]; people: Person[] }>("/api/chat/channels"); setChannels(j.channels); setPeople(j.people); onUnread?.(j.channels.reduce((a, c) => a + c.unread, 0)); } catch { /* keep what is shown */ }
+  }, [onUnread]);
 
   /* Load a conversation, then poll it for new messages while the tab is visible. */
   /* eslint-disable react-hooks/set-state-in-effect */
@@ -97,11 +100,10 @@ export function Chat({ initial }: { initial: { me: string; channels: Chan[]; peo
   const row = "flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-start transition-colors";
 
   return (
-    <div className="panel grid h-[calc(100dvh-13rem)] min-h-[34rem] overflow-hidden rounded-[32px] md:grid-cols-[19rem_1fr]">
-      <aside className={cn("flex min-h-0 flex-col border-border md:border-e", mobileThread && "hidden md:flex")}>
-        <div className="p-4 pb-2">
-          <h2 className="text-lg font-light tracking-tight">Messages</h2>
-          <label className="mt-3 flex items-center gap-2 rounded-full bg-surface-2 px-4 py-2 text-sm"><Search size={15} className="text-muted" />
+    <div className={cn("grid h-full min-h-0 overflow-hidden", split && "grid-cols-[19rem_1fr]")}>
+      <aside className={cn("flex min-h-0 flex-col border-border", split && "border-e", !split && mobileThread && "hidden")}>
+        <div className="p-3 pb-2">
+          <label className="flex items-center gap-2 rounded-full bg-surface-2 px-4 py-2 text-sm"><Search size={15} className="text-muted" />
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Find a colleague" aria-label="Find a colleague" className="w-full bg-transparent outline-none placeholder:text-muted" /></label>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-3">
@@ -130,10 +132,10 @@ export function Chat({ initial }: { initial: { me: string; channels: Chan[]; peo
         </div>
       </aside>
 
-      <section className={cn("flex min-h-0 flex-col", !mobileThread && "hidden md:flex")}>
+      <section className={cn("flex min-h-0 flex-col", !split && !mobileThread && "hidden")}>
         {current ? <>
           <header className="flex items-center gap-3 border-b border-border px-4 py-3">
-            <button onClick={() => setMobileThread(false)} aria-label="Back to conversations" className="grid size-9 place-items-center rounded-full hover:bg-surface-2 md:hidden"><ArrowLeft size={18} /></button>
+            <button onClick={() => setMobileThread(false)} aria-label="Back to conversations" className={cn("size-9 place-items-center rounded-full hover:bg-surface-2", split ? "hidden" : "grid")}><ArrowLeft size={18} /></button>
             {current.kind === "dm"
               ? (() => { const o = person.get(current.members?.find((m) => m !== me) ?? ""); return <Avatar name={o?.name ?? title} userId={o?.userId} photo={o?.photo} size={40} />; })()
               : <span className="grid size-10 place-items-center rounded-full bg-tint text-primary"><Hash size={18} /></span>}
