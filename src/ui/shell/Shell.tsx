@@ -6,14 +6,15 @@ import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "
 import { Bell, Command, LogOut, Moon, Search, Sun } from "lucide-react";
 import { cn } from "@/ui/kit";
 import { ICONS, type IconKey } from "@/ui/shell/icons";
+import { Slide } from "@/ui/Slide";
 
 type Item = { href: string; label: string; icon: IconKey };
 
 const GROUP_OF: Record<string, string> = {
-  "/dashboard": "Overview", "/portal": "Overview",
+  "/dashboard": "Overview", "/chat": "Overview", "/portal": "Overview",
   "/patients": "Clinical", "/appointments": "Clinical", "/queue": "Clinical", "/laboratory": "Clinical", "/radiology": "Clinical", "/pharmacy": "Clinical", "/hospital": "Clinical",
   "/billing": "Revenue", "/insurance": "Revenue", "/accounting": "Finance", "/finance": "Finance", "/tax": "Finance", "/books": "Finance", "/procurement": "Operations", "/inventory": "Operations",
-  "/chat": "People", "/hr": "People", "/crm": "People", "/communications": "People",
+  "/hr": "People", "/crm": "People", "/communications": "People",
   "/compliance": "Platform", "/ai": "Platform", "/settings/security": "Platform",
 };
 const ORDER = ["Overview", "Clinical", "Revenue", "Finance", "Operations", "People", "Platform"];
@@ -33,6 +34,8 @@ export function Shell({
   const [dark, setDark] = useState(false);
   const [open, setOpen] = useState(false);
   const [dot, setDot] = useState<{ y: number; ready: boolean }>({ y: 0, ready: false });
+  const [pending, setPending] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
   const navRef = useRef<HTMLElement>(null);
 
   /* Browser-only state (theme class) can only be read after mount. */
@@ -43,17 +46,36 @@ export function Shell({
     setDark(document.documentElement.classList.contains("dark"));
   }, [dir, locale]);
   /* The rail indicator glides to the active link: measure after layout, again when fonts or the window change. */
+  useEffect(() => { setPending(null); }, [path]);
   useEffect(() => {
     const place = () => {
       const a = navRef.current?.querySelector<HTMLElement>("[aria-current='page']");
-      if (a) setDot((d) => (d.ready && d.y === a.offsetTop ? d : { y: a.offsetTop, ready: true }));
-      else setDot((d) => (d.ready ? { ...d, ready: false } : d));
+      if (a) {
+        a.scrollIntoView({ block: "nearest" }); // the rail scrolls when the screen is short; keep the chosen item in view
+        setDot((d) => (d.ready && d.y === a.offsetTop ? d : { y: a.offsetTop, ready: true }));
+      } else setDot((d) => (d.ready ? { ...d, ready: false } : d));
     };
     place();
     window.addEventListener("resize", place);
     return () => window.removeEventListener("resize", place);
-  }, [path]);
+  }, [path, pending]);
   /* eslint-enable react-hooks/set-state-in-effect */
+  /* Instant feedback: any in-app link press starts the progress bar and dims the page until the address actually changes. */
+  useEffect(() => {
+    let timer: ReturnType<typeof setInterval> | undefined;
+    const click = (e: MouseEvent) => {
+      const a = (e.target as HTMLElement | null)?.closest?.("a[href]") as HTMLAnchorElement | null;
+      if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || (a.target && a.target !== "_self") || a.origin !== location.origin) return;
+      const from = location.pathname + location.search;
+      if (a.pathname + a.search === from) return;
+      setBusy(true);
+      clearInterval(timer);
+      const t0 = Date.now();
+      timer = setInterval(() => { if (location.pathname + location.search !== from || Date.now() - t0 > 20000) { clearInterval(timer); setBusy(false); } }, 80);
+    };
+    document.addEventListener("click", click, true);
+    return () => { document.removeEventListener("click", click, true); clearInterval(timer); };
+  }, []);
   useEffect(() => {
     const k = (e: KeyboardEvent) => { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); setOpen((o) => !o); } };
     window.addEventListener("keydown", k);
@@ -72,6 +94,7 @@ export function Shell({
 
   return (
     <div dir={dir} lang={locale} className="flex min-h-screen">
+      <div aria-hidden className={cn("no-print pointer-events-none fixed inset-x-0 top-0 z-[60] h-[3px] origin-left brand-grad transition-opacity duration-300", busy ? "nav-bar opacity-100" : "opacity-0")} />
       <aside className="no-print relative hidden w-[92px] shrink-0 md:block">
         <div className="rail side-glass fixed inset-y-3 start-3 z-30 flex flex-col overflow-hidden rounded-[34px] text-white">
           <Link href="/dashboard" aria-label="Elister Med home" className="flex h-[76px] shrink-0 items-center gap-3 ps-3">
@@ -85,9 +108,9 @@ export function Shell({
                 {gi > 0 && <div aria-hidden className="mx-3 my-2 h-px bg-white/10" />}
                 {rows.map((i) => {
                   const Icon = ICONS[i.icon];
-                  const active = isActive(path, i.href);
+                  const active = pending ? pending === i.href : isActive(path, i.href);
                   return (
-                    <Link key={i.href} href={i.href} title={i.label} aria-current={active ? "page" : undefined}
+                    <Link key={i.href} href={i.href} title={i.label} aria-current={active ? "page" : undefined} onClick={() => setPending(i.href)}
                       className={cn("group relative z-10 flex h-11 items-center gap-3 rounded-full text-sm transition-colors", active ? "text-white" : "text-white/65 hover:text-white", active && !dot.ready && "brand-grad")}>
                       <span className={cn("grid size-11 shrink-0 place-items-center rounded-full transition-colors", !active && "group-hover:bg-white/10")}><Icon size={19} strokeWidth={1.75} /></span>
                       <span className={cn("rail-label truncate pe-4", active && "font-medium")}>{i.label}</span>
@@ -118,13 +141,16 @@ export function Shell({
           <div className="hidden min-w-0 items-center gap-3 text-sm lg:flex">
             <span className="truncate font-medium">{orgName}</span><span aria-hidden className="h-4 w-px bg-border" /><span className="truncate text-muted">{branch}</span>
           </div>
-          <div className="mx-auto flex items-center gap-1 rounded-full bg-ink p-1.5 text-[12.5px] text-[var(--btn-fg)] shadow-[0_14px_30px_-14px_rgba(20,24,31,.6)]">
-            {pill.map((q, n) => (
-              <Link key={q.href} href={q.href} className={cn("whitespace-nowrap rounded-full px-4 py-2 font-medium transition-colors", n === 0 ? "bg-[var(--btn-fg)] text-ink" : "hidden opacity-80 hover:bg-white/10 hover:opacity-100 md:inline-flex dark:hover:bg-black/10")}>{q.label}</Link>
-            ))}
-            <button onClick={() => setOpen(true)} aria-label="Open command palette" className="flex items-center gap-2 whitespace-nowrap rounded-full px-4 py-2 opacity-80 transition hover:bg-white/10 hover:opacity-100 dark:hover:bg-black/10">
-              <Search size={14} /><span className="hidden sm:inline">{labels.search}</span><kbd className="hidden rounded-md border border-current/25 px-1.5 text-[10px] opacity-70 lg:inline">Ctrl K</kbd>
-            </button>
+          <div className="mx-auto">
+            <Slide label="Quick actions" storeKey="pill" active={pill.find((q) => path === q.href || path.startsWith(q.href + "/"))?.href}
+              items={pill.map((q) => ({ key: q.href, label: q.label, href: q.href }))}
+              track="flex items-center gap-1 rounded-full bg-ink p-1.5 text-[12.5px] text-[var(--btn-fg)] shadow-[0_14px_30px_-14px_rgba(11,53,88,.6)]"
+              itemClass="whitespace-nowrap rounded-full px-4 py-2 font-medium opacity-80 hover:opacity-100" activeClass="!opacity-100 !text-ink"
+              thumbClass="rounded-full bg-[var(--btn-fg)] shadow-[0_2px_8px_-2px_rgba(0,0,0,.35)]">
+              <button onClick={() => setOpen(true)} aria-label="Open command palette" className="relative z-10 flex items-center gap-2 whitespace-nowrap rounded-full px-4 py-2 opacity-80 transition hover:opacity-100">
+                <Search size={14} /><span className="hidden sm:inline">{labels.search}</span><kbd className="hidden rounded-md border border-current/25 px-1.5 text-[10px] opacity-70 lg:inline">Ctrl K</kbd>
+              </button>
+            </Slide>
           </div>
           <div className="flex items-center gap-2">
             <Link href="/notifications" aria-label={`Notifications${unread ? ` (${unread} unread)` : ""}`} className={cn(iconBtn, "relative")}><Bell size={17} />{unread > 0 && <span className="absolute end-0 top-0 grid min-w-4 place-items-center rounded-full bg-danger px-1 text-[10px] font-semibold text-white ring-2 ring-bg">{unread > 9 ? "9+" : unread}</span>}</Link>
@@ -136,7 +162,7 @@ export function Shell({
           </div>
         </header>
         <MobileNav items={items} path={path} />
-        <main className="flex-1 px-4 pb-8 pt-3 md:px-6 md:ps-3"><div className="mx-auto max-w-[1480px]">{children}</div></main>
+        <main aria-busy={busy} className={cn("flex-1 px-4 pb-8 pt-3 transition-opacity duration-200 md:px-6 md:ps-3", busy && "opacity-60")}><div className="mx-auto max-w-[1480px]">{children}</div></main>
         <footer className="no-print px-6 py-4 text-center text-[11px] text-muted">Elister Med · Your Trusted Family Healthcare Partner in Dubai · Demo environment with synthetic data</footer>
       </div>
       {open && <Palette onClose={() => setOpen(false)} entries={[...items.map((i) => ({ href: i.href, label: i.label })), ...quick]} />}

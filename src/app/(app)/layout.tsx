@@ -25,9 +25,11 @@ async function signOut() {
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const ctx = await requireCtx();
   const locale = await getLocale();
-  const org = await tenantCol<{ name: string }>(ctx.orgId, "orgs").findOne({ _id: ctx.orgId } as never);
-  const branch = await tenantCol<{ name: string }>(ctx.orgId, "branches").findOne({ _id: ctx.branchId } as never);
-  const unread = await unreadCount(ctx);
+  const [org, branch, unread] = await Promise.all([
+    tenantCol<{ name: string }>(ctx.orgId, "orgs").findOne({ _id: ctx.orgId } as never),
+    tenantCol<{ name: string }>(ctx.orgId, "branches").findOne({ _id: ctx.branchId } as never),
+    unreadCount(ctx),
+  ]);
   const isPortal = ctx.roles.includes("patient_portal_user");
   const items = isPortal
     ? [{ href: "/portal", label: t(locale, "nav.portal"), icon: "portal" as const }]

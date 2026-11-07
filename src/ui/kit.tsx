@@ -2,6 +2,7 @@ import type { ReactNode, ButtonHTMLAttributes, InputHTMLAttributes, SelectHTMLAt
 import { clsx } from "clsx";
 import { AlertTriangle, CheckCircle2, Info, Lock, TrendingDown, TrendingUp } from "lucide-react";
 import { RouteIcon } from "@/ui/shell/RouteIcon";
+import { Slide } from "@/ui/Slide";
 
 export const cn = clsx;
 
@@ -127,12 +128,10 @@ export function NoAccess({ what = "this page" }: { what?: string }) {
 
 export function Tabs({ tabs, active, base = "" }: { tabs: { key: string; label: string }[]; active: string; base?: string }) {
   return (
-    <nav className="glass-tabs mb-1 flex max-w-full flex-wrap gap-1 rounded-full p-1.5" aria-label="Sections">
-      {tabs.map((t) => (
-        <a key={t.key} href={`${base}?tab=${t.key}`} aria-current={t.key === active ? "page" : undefined}
-          className={cn("glass-tab rounded-full px-4 py-1.5 text-sm", t.key === active ? "font-medium" : "text-muted hover:bg-surface/70 hover:text-fg")}>{t.label}</a>
-      ))}
-    </nav>
+    <Slide label="Sections" storeKey={`tabs:${base}`} active={active} items={tabs.map((t) => ({ key: t.key, label: t.label, href: `${base}?tab=${t.key}` }))}
+      track="glass-tabs mb-1 flex max-w-full flex-wrap gap-1 rounded-full p-1.5"
+      itemClass="rounded-full px-4 py-1.5 text-sm text-muted hover:text-fg" activeClass="!text-[var(--btn-fg)] font-medium hover:!text-[var(--btn-fg)]"
+      thumbClass="rounded-full bg-[var(--btn-bg)] shadow-[inset_0_1px_0_rgba(255,255,255,.18),0_6px_14px_-8px_rgba(11,53,88,.7)]" />
   );
 }
 

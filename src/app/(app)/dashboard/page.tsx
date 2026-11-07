@@ -23,19 +23,20 @@ const greeting = () => { const h = Number(new Date().toLocaleString("en-GB", { t
 export default async function DashboardPage({ searchParams }: { searchParams: SP }) {
   const ctx = await requireCtx();
   if (ctx.roles.includes("patient_portal_user")) redirect("/portal");
-  const sp = await searchParams;
-  const prefs = await getPrefs(ctx);
-  const recent = await recentPatients(ctx);
+  const [sp, prefs, recent] = await Promise.all([searchParams, getPrefs(ctx), recentPatients(ctx)]);
   const show = (w: string) => prefs.widgets.includes(w);
   const { from, to, fromStr, toStr } = parseRange(sp);
   const can = (p: string) => ctx.permissions.includes(p as never);
 
-  const exec = can("reports:view") && show("executive") ? await executiveDashboard(ctx, { from, to }) : null;
-  const reception = can("appointments:view") && can("queue:view") && show("reception") ? await receptionDashboard(ctx, { day: new Date() }) : null;
-  const doctor = ctx.roles.includes("doctor") && show("doctor") ? await doctorDashboard(ctx, { day: new Date() }).catch(() => null) : null;
-  const accounts = can("ledger:view") && show("accounts") ? await accountsDashboard(ctx, { day: new Date() }) : null;
+  /* Independent widgets load side by side, not one after another. */
+  const [exec, reception, doctor, accounts, doctors] = await Promise.all([
+    can("reports:view") && show("executive") ? executiveDashboard(ctx, { from, to }) : null,
+    can("appointments:view") && can("queue:view") && show("reception") ? receptionDashboard(ctx, { day: new Date() }) : null,
+    ctx.roles.includes("doctor") && show("doctor") ? doctorDashboard(ctx, { day: new Date() }).catch(() => null) : null,
+    can("ledger:view") && show("accounts") ? accountsDashboard(ctx, { day: new Date() }) : null,
+    can("appointments:view") ? listDoctors(ctx) : [],
+  ]);
 
-  const doctors = can("appointments:view") ? await listDoctors(ctx) : [];
   const photos = await photoVersions(ctx.orgId, doctors.map((d) => d.userId));
   const todayDow = dubaiParts(new Date()).dow;
   const launch = ([
