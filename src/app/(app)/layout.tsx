@@ -31,7 +31,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const isPortal = ctx.roles.includes("patient_portal_user");
   const items = isPortal
     ? [{ href: "/portal", label: t(locale, "nav.portal"), icon: "portal" as const }]
-    : NAV.filter((n) => !n.portal && ctx.permissions.includes(n.perm)).map((n) => ({ href: n.href, label: t(locale, n.labelKey), icon: n.icon }));
+    : [...NAV.filter((n) => !n.portal && ctx.permissions.includes(n.perm)).map((n) => ({ href: n.href, label: t(locale, n.labelKey), icon: n.icon })), { href: "/chat", label: t(locale, "nav.chat"), icon: "team" as const }];
   const quick = [
     ctx.permissions.includes("patients:create") && { href: "/patients/new", label: t(locale, "patients.new") },
     ctx.permissions.includes("appointments:create") && { href: "/appointments", label: "Book appointment" },

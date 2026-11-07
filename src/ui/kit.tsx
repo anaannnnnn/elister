@@ -5,9 +5,9 @@ import { RouteIcon } from "@/ui/shell/RouteIcon";
 
 export const cn = clsx;
 
-export function Card({ title, action, children, className, flush }: { title?: ReactNode; action?: ReactNode; children: ReactNode; className?: string; flush?: boolean }) {
+export function Card({ title, action, children, className, flush, id }: { id?: string; title?: ReactNode; action?: ReactNode; children: ReactNode; className?: string; flush?: boolean }) {
   return (
-    <section className={cn("panel overflow-hidden rounded-[28px]", className)}>
+    <section id={id} className={cn("panel overflow-hidden rounded-[28px]", className)}>
       {(title || action) && (
         <header className="flex items-center justify-between gap-3 px-6 pt-5">
           <h2 className="text-[17px] font-medium tracking-tight">{title}</h2>

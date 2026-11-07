@@ -10,6 +10,10 @@ import { receptionDashboard } from "@/modules/dashboard/reception";
 import { doctorDashboard } from "@/modules/dashboard/doctor";
 import { accountsDashboard } from "@/modules/dashboard/accounts";
 import { BRAND } from "@/ui/brand";
+import { DoctorCard } from "@/ui/DoctorCard";
+import { listDoctors } from "@/modules/appointments/service";
+import { photoVersions } from "@/modules/people/photos";
+import { dubaiParts } from "@/core/time";
 import { Badge, Button, Card, Donut, Input, PageHeader, Stat, aed } from "@/ui/kit";
 
 type SP = Promise<{ from?: string; to?: string }>;
@@ -31,6 +35,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: SP
   const doctor = ctx.roles.includes("doctor") && show("doctor") ? await doctorDashboard(ctx, { day: new Date() }).catch(() => null) : null;
   const accounts = can("ledger:view") && show("accounts") ? await accountsDashboard(ctx, { day: new Date() }) : null;
 
+  const doctors = can("appointments:view") ? await listDoctors(ctx) : [];
+  const photos = await photoVersions(ctx.orgId, doctors.map((d) => d.userId));
+  const todayDow = dubaiParts(new Date()).dow;
   const launch = ([
     can("patients:create") && { href: "/patients/new", label: "Register patient", icon: UserPlus },
     can("appointments:view") && { href: "/appointments", label: "Appointments", icon: CalendarDays },
@@ -65,6 +72,15 @@ export default async function DashboardPage({ searchParams }: { searchParams: SP
                 <span className="text-sm font-medium leading-tight">{q.label}</span>
               </Link>
             ))}
+          </div>
+        </section>
+      )}
+
+      {doctors.length > 0 && (
+        <section aria-label="Doctors" className="space-y-3">
+          <h2 className="text-[22px] font-light tracking-tight">Our doctors</h2>
+          <div className="-mx-1 flex snap-x gap-3 overflow-x-auto px-1 pb-2">
+            {doctors.map((d) => <DoctorCard key={d._id} doctor={d} today={todayDow} photo={d.userId ? photos.get(d.userId) : null} canEditPhoto={can("hr:update")} bookHref={can("appointments:create") ? "/appointments#book" : undefined} />)}
           </div>
         </section>
       )}

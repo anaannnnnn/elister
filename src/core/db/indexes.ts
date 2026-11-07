@@ -131,6 +131,10 @@ INDEXES.push(
   ["accounts", { orgId: 1, code: 1 }, { unique: true }],
   ["fiscal_periods", { orgId: 1, year: 1, month: 1 }, { unique: true }],
   ["memberships", { userId: 1 }],
+  ["chat_channels", { orgId: 1, kind: 1 }],
+  ["chat_messages", { orgId: 1, channelId: 1, at: 1 }],
+  ["chat_reads", { orgId: 1, userId: 1 }],
+  ["profile_photos", { orgId: 1, userId: 1 }, { unique: true }],
 );
 
 INDEXES.push(

@@ -8,6 +8,8 @@ import { Alert, Badge, Button, Card, Field, Input, NoAccess, PageHeader, Select,
 import { bookAction, cancelAction, checkInAction, noShowAction } from "./actions";
 import { DayGrid, type GridDoctor } from "./DayGrid";
 import { PatientPicker } from "./PatientPicker";
+import { DoctorCard } from "@/ui/DoctorCard";
+import { photoVersions } from "@/modules/people/photos";
 
 export default async function AppointmentsPage({ searchParams }: { searchParams: Promise<{ date?: string; patient?: string; error?: string }> }) {
   const ctx = await requireCtx();
@@ -36,6 +38,8 @@ export default async function AppointmentsPage({ searchParams }: { searchParams:
   const ymd = (d: Date) => dubaiParts(d).ymd;
   const docName = new Map(doctors.map((d) => [d._id, d.name]));
   const can = (p: string) => ctx.permissions.includes(p as never);
+  const photos = await photoVersions(ctx.orgId, doctors.map((d) => d.userId));
+  const today = dubaiParts(new Date()).dow;
 
   return (
     <div className="space-y-4">
@@ -43,8 +47,17 @@ export default async function AppointmentsPage({ searchParams }: { searchParams:
         actions={<div className="flex items-center gap-1"><Link className="rounded-ui border border-border px-3 py-2 text-sm" href={`?date=${ymd(prev)}`}>←</Link><form><Input type="date" name="date" defaultValue={date} aria-label="Date" /></form><Link className="rounded-ui border border-border px-3 py-2 text-sm" href={`?date=${ymd(next)}`}>→</Link></div>} />
       {sp.error && <Alert>{sp.error}</Alert>}
 
+      {doctors.length > 0 && (
+        <section aria-label="Our doctors" className="space-y-3">
+          <h2 className="text-[22px] font-light tracking-tight">Our doctors</h2>
+          <div className="-mx-1 flex snap-x gap-3 overflow-x-auto px-1 pb-2">
+            {doctors.map((d) => <DoctorCard key={d._id} doctor={d} today={today} photo={d.userId ? photos.get(d.userId) : null} canEditPhoto={can("hr:update")} bookHref={can("appointments:create") ? `?date=${date}#book` : undefined} />)}
+          </div>
+        </section>
+      )}
+
       {can("appointments:create") && (
-        <Card title="Book appointment">
+        <Card title="Book appointment" className="scroll-mt-24" id="book">
           <form action={bookAction} className="grid gap-3 md:grid-cols-6">
             <input type="hidden" name="date" value={date} />
             <div className="md:col-span-2"><Field label="Patient"><PatientPicker initial={pre ? { id: pre._id, label: `${pre.fullName} (${pre.mrn})` } : undefined} /></Field></div>

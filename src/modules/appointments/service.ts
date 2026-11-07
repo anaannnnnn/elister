@@ -158,7 +158,7 @@ export async function listPatientAppointments(ctx: Ctx, patientId: string) {
 
 export async function listDoctors(ctx: Ctx) {
   assertPermission(ctx, "appointments:view");
-  return tenantCol<{ _id: string; name: string; nameAr?: string; specialty?: string; slotMinutes: number; workStart: string; workEnd: string; workDays: number[] }>(ctx.orgId, "staff").find({ active: true, role: "doctor" } as never, { sort: { name: 1 } });
+  return tenantCol<{ _id: string; name: string; nameAr?: string; specialty?: string; userId?: string; slotMinutes: number; workStart: string; workEnd: string; workDays: number[] }>(ctx.orgId, "staff").find({ active: true, role: "doctor" } as never, { sort: { name: 1 } });
 }
 
 export async function getAppointment(ctx: Ctx, id: string) {

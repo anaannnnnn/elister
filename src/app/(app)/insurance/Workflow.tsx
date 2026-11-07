@@ -110,7 +110,7 @@ export async function PatientTab({ ctx, patientId, back }: { ctx: C; patientId?:
                 <Table head={["", "Service", "Qty", "Unit price"]}>{charges.map((c) => <tr key={c._id}><td><input type="checkbox" name="chargeId" value={c._id} defaultChecked /></td><td>{c.name}</td><td>{c.qty}</td><td>{aed(fromDecimal128(c.unitPrice).toFixed(2))}</td></tr>)}</Table>
                 {required.length > 0 && !approved && <Alert tone="warn">Pre-authorisation is not approved yet. You can still create the claim, but expect a rejection.</Alert>}
                 <div className="flex items-end gap-2"><select name="policyId" className="rounded-ui border border-border bg-surface px-3 py-2 text-sm">{(active.length ? active : policies).map((p) => <option key={p._id} value={p._id}>{polLabel(p)}</option>)}</select><button className="rounded-ui bg-primary px-3 py-2 text-sm font-medium text-primary-fg">Create invoice and claim</button></div>
-                <p className="text-xs text-muted">The patient pays their co-pay; the insurer's share becomes a claim. You are then taken to the claims list to validate and send it.</p>
+                <p className="text-xs text-muted">The patient pays their co-pay; the insurer&apos;s share becomes a claim. You are then taken to the claims list to validate and send it.</p>
               </form>
             )}
           </Step>
