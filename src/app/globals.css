@@ -8,76 +8,65 @@
  * the tab underline and one staggered entrance per page. Earlier designs: tags design-v1-backup, design-v2-glass, design-v4-liquid-glass.
  */
 :root {
-  --bg: #eceef2;
+  --bg: #e9eff3;
   --surface: #ffffff;
-  --surface-2: #f4f5f8;
-  --border: #e2e5ec;
-  --fg: #151a24;
-  --muted: #656f82;
+  --surface-2: #f2f6f9;
+  --border: #dde6ec;
+  --fg: #0e2236;
+  --muted: #5d7284;
   --primary: #0a7ba5;
-  --primary-strong: #151a24;
+  --primary-strong: #0b3558;
   --primary-fg: #ffffff;
-  --accent: #76a1f3;
-  --teal: #0aa39a;
+  --accent: #00a0a0;
+  --teal: #00a0a0;
   --ok: #107a52;
   --warn: #a35505;
   --danger: #bb3626;
   --radius: 1rem;
 
-  --ink: #14181f;
-  --btn-bg: #14181f;
+  /* Elister: navy #0b3558, azure #0a7ba5, teal #00a0a0 and nothing else */
+  --ink: #0b3558;
+  --btn-bg: #0b3558;
   --btn-fg: #ffffff;
-  --rail: #171b24;
-  --t-peach: #fadbca;
-  --t-sky: #d0e1f5;
-  --t-lilac: #e4dff5;
-  --t-mint: #d3eee8;
-  --t-sand: #faedc9;
-  --t-rose: #f8d8de;
-  --t-grey: #e6e8ed;
+  --rail: #0b3558;
+  --brand-tint: #dcedf3;
 
-  --shadow-card: 0 1px 2px rgba(20, 24, 31, 0.04), 0 14px 34px -18px rgba(20, 24, 31, 0.16);
-  --shadow-pop: 0 2px 4px rgba(20, 24, 31, 0.06), 0 30px 60px -24px rgba(20, 24, 31, 0.32);
+  --shadow-card: 0 1px 2px rgba(11, 53, 88, 0.05), 0 14px 34px -18px rgba(11, 53, 88, 0.2);
+  --shadow-pop: 0 2px 4px rgba(11, 53, 88, 0.08), 0 30px 60px -24px rgba(11, 53, 88, 0.4);
 
-  --grad-brand: linear-gradient(135deg, #0b6f98 0%, #0a8fb0 55%, #12a9b4 100%);
-  --grad-accent: linear-gradient(90deg, #0b6f98 0%, #0aa39a 100%);
+  --grad-brand: linear-gradient(135deg, #0a7ba5 0%, #00a0a0 100%);
+  --grad-accent: linear-gradient(90deg, #0a7ba5 0%, #00a0a0 100%);
   --grad-hero:
-    radial-gradient(60% 90% at 88% 0%, rgba(104, 214, 168, 0.85) 0%, transparent 62%),
-    radial-gradient(70% 100% at 8% 100%, rgba(24, 142, 196, 0.9) 0%, transparent 60%),
-    linear-gradient(135deg, #0a6f86 0%, #14899c 100%);
+    radial-gradient(60% 90% at 92% 0%, rgba(0, 160, 160, 0.75) 0%, transparent 62%),
+    radial-gradient(70% 100% at 0% 100%, rgba(10, 123, 165, 0.7) 0%, transparent 60%),
+    linear-gradient(135deg, #0b3558 0%, #0a5a82 100%);
   --tint: rgba(10, 123, 165, 0.06);
 }
 .dark {
-  --bg: #0c1018;
-  --surface: #151b27;
-  --surface-2: #1b2331;
-  --border: #263044;
-  --fg: #edf0f6;
-  --muted: #97a1b4;
-  --primary: #62b9d8;
-  --primary-strong: #edf0f6;
-  --primary-fg: #08202b;
-  --accent: #8fb3f6;
-  --teal: #38cdc2;
+  --bg: #07131f;
+  --surface: #0f2133;
+  --surface-2: #14293e;
+  --border: #1f3a52;
+  --fg: #e8f1f7;
+  --muted: #94adc0;
+  --primary: #4cb6d8;
+  --primary-strong: #e8f1f7;
+  --primary-fg: #04222c;
+  --accent: #2fd0c8;
+  --teal: #2fd0c8;
   --ok: #4ade9b;
   --warn: #fbbf4a;
   --danger: #ff8a7a;
 
-  --ink: #edf0f6;
-  --btn-bg: #edf0f6;
-  --btn-fg: #12161d;
-  --rail: #1a2130;
-  --t-peach: #3a2d2a;
-  --t-sky: #1f3047;
-  --t-lilac: #2c2841;
-  --t-mint: #1c3836;
-  --t-sand: #393524;
-  --t-rose: #3b272c;
-  --t-grey: #232b3a;
+  --ink: #e8f1f7;
+  --btn-bg: #e8f1f7;
+  --btn-fg: #0b3558;
+  --rail: #0c2a46;
+  --brand-tint: #16384f;
 
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 16px 36px -20px rgba(0, 0, 0, 0.7);
   --shadow-pop: 0 2px 4px rgba(0, 0, 0, 0.5), 0 30px 60px -24px rgba(0, 0, 0, 0.8);
-  --tint: rgba(98, 185, 216, 0.08);
+  --tint: rgba(76, 182, 216, 0.08);
 }
 
 @theme inline {
@@ -97,13 +86,7 @@
   --color-danger: var(--danger);
   --color-ink: var(--ink);
   --color-rail: var(--rail);
-  --color-peach: var(--t-peach);
-  --color-sky: var(--t-sky);
-  --color-lilac: var(--t-lilac);
-  --color-mint: var(--t-mint);
-  --color-sand: var(--t-sand);
-  --color-rose: var(--t-rose);
-  --color-grey: var(--t-grey);
+  --color-tint: var(--brand-tint);
   --radius-ui: var(--radius);
   --shadow-card: var(--shadow-card);
   --font-sans: var(--font-poppins), var(--font-plex-arabic), ui-sans-serif, system-ui, "Segoe UI", Tahoma, sans-serif;

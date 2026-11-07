@@ -41,7 +41,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: SP
     can("pharmacy:view") && { href: "/pharmacy", label: "Pharmacy", icon: Pill },
     can("laboratory:view") && { href: "/laboratory", label: "Laboratory", icon: FlaskConical },
     can("reports:view") && { href: "/finance", label: "Finance", icon: Landmark },
-    can("ledger:view") && { href: "/books", label: "Business books", icon: BookOpen },
+    can("ledger:view") && { href: "/books", label: "Clinic books", icon: BookOpen },
   ].filter(Boolean) as { href: string; label: string; icon: typeof Users }[]).slice(0, 10);
   const firstName = ctx.name.replace(/\(.*?\)/g, "").trim().split(" ")[0];
   const topDoctors = exec ? exec.current.revenueByDoctor.slice(0, 6) : [];
@@ -61,7 +61,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: SP
           <div className="stagger grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
             {launch.map((q) => (
               <Link key={q.href} href={q.href} className={`group flex items-center gap-3 rounded-[28px] p-4 transition-transform duration-300 hover:-translate-y-0.5 bg-surface shadow-card`}>
-                <span className="grid size-12 shrink-0 place-items-center rounded-full bg-sky text-fg transition-transform duration-300 group-hover:scale-105"><q.icon size={20} strokeWidth={1.6} /></span>
+                <span className="grid size-12 shrink-0 place-items-center rounded-full bg-tint text-primary transition-transform duration-300 group-hover:scale-105"><q.icon size={20} strokeWidth={1.6} /></span>
                 <span className="text-sm font-medium leading-tight">{q.label}</span>
               </Link>
             ))}

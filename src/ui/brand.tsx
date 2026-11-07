@@ -1,6 +1,7 @@
 import Image from "next/image";
 import type { ReactNode } from "react";
 import { cn } from "@/ui/kit";
+import { RouteIcon } from "@/ui/shell/RouteIcon";
 
 export const BRAND = {
   name: "Elister Med",
@@ -39,7 +40,7 @@ export function Mark({ className, size = 32 }: { className?: string; size?: numb
 export function BrandBanner({ eyebrow, title, children }: { eyebrow?: string; title: string; children?: ReactNode }) {
   return (
     <div className="hero-grad relative mb-6 overflow-hidden rounded-[32px] p-7 text-white sm:p-8">
-      <Image src="/brand/mark.png" alt="" aria-hidden width={210} height={210} className="pointer-events-none absolute -end-6 top-1/2 size-52 -translate-y-1/2 opacity-[0.12]" />
+      <span aria-hidden className="pointer-events-none absolute -end-8 top-1/2 -translate-y-1/2 text-white opacity-[0.1]"><RouteIcon size={230} strokeWidth={1} /></span>
       <div className="relative flex flex-wrap items-center justify-between gap-4">
         <div className="min-w-0">
           {eyebrow && <div className="mb-3 inline-flex rounded-full bg-white/20 px-3.5 py-1 text-xs font-medium text-white">{eyebrow}</div>}

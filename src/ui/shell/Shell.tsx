@@ -3,11 +3,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Bell, BedDouble, BookOpen, Bot, CalendarDays, ClipboardCheck, Command, FlaskConical, Heart, Landmark, LayoutDashboard, ListOrdered, LogOut, MessageSquare, Moon, Package, Pill, Receipt, Search, ShieldCheck, Sun, UserCog, Users } from "lucide-react";
+import { Bell, Command, LogOut, Moon, Search, Sun } from "lucide-react";
 import { cn } from "@/ui/kit";
+import { ICONS, type IconKey } from "@/ui/shell/icons";
 
-const ICONS = { dash: LayoutDashboard, users: Users, cal: CalendarDays, queue: ListOrdered, bill: Receipt, book: BookOpen, shield: ShieldCheck, med: Pill, flask: FlaskConical, box: Package, people: UserCog, heart: Heart, chat: MessageSquare, check: ClipboardCheck, bank: Landmark, bed: BedDouble, bot: Bot } as const;
-type Item = { href: string; label: string; icon: keyof typeof ICONS };
+type Item = { href: string; label: string; icon: IconKey };
 
 const GROUP_OF: Record<string, string> = {
   "/dashboard": "Overview", "/portal": "Overview",
@@ -79,7 +79,7 @@ export function Shell({
             <span className="rail-label min-w-0"><span className="block truncate text-sm font-medium">{orgName}</span><span className="block truncate text-xs text-white/55">{branch}</span></span>
           </Link>
           <nav ref={navRef} aria-label="Primary" className="rail-nav relative flex-1 overflow-y-auto overflow-x-hidden px-3 pb-3">
-            <span aria-hidden className={cn("rail-dot pointer-events-none absolute start-3 size-11 rounded-full bg-[#d0e1f5]", dot.ready ? "opacity-100" : "opacity-0")} style={{ top: dot.y }} />
+            <span aria-hidden className={cn("rail-dot pointer-events-none absolute start-3 size-11 rounded-full brand-grad shadow-[0_8px_18px_-8px_rgba(0,160,160,.8)]", dot.ready ? "opacity-100" : "opacity-0")} style={{ top: dot.y }} />
             {grouped.map(({ g, rows }, gi) => (
               <Fragment key={g}>
                 {gi > 0 && <div aria-hidden className="mx-3 my-2 h-px bg-white/10" />}
@@ -88,7 +88,7 @@ export function Shell({
                   const active = isActive(path, i.href);
                   return (
                     <Link key={i.href} href={i.href} title={i.label} aria-current={active ? "page" : undefined}
-                      className={cn("group relative z-10 flex h-11 items-center gap-3 rounded-full text-sm transition-colors", active ? "text-[#14181f]" : "text-white/65 hover:text-white", active && !dot.ready && "bg-[#d0e1f5]")}>
+                      className={cn("group relative z-10 flex h-11 items-center gap-3 rounded-full text-sm transition-colors", active ? "text-white" : "text-white/65 hover:text-white", active && !dot.ready && "brand-grad")}>
                       <span className={cn("grid size-11 shrink-0 place-items-center rounded-full transition-colors", !active && "group-hover:bg-white/10")}><Icon size={19} strokeWidth={1.75} /></span>
                       <span className={cn("rail-label truncate pe-4", active && "font-medium")}>{i.label}</span>
                     </Link>
@@ -130,7 +130,7 @@ export function Shell({
             <Link href="/notifications" aria-label={`Notifications${unread ? ` (${unread} unread)` : ""}`} className={cn(iconBtn, "relative")}><Bell size={17} />{unread > 0 && <span className="absolute end-0 top-0 grid min-w-4 place-items-center rounded-full bg-danger px-1 text-[10px] font-semibold text-white ring-2 ring-bg">{unread > 9 ? "9+" : unread}</span>}</Link>
             <form action={setLocale} className="hidden sm:block"><button className={cn(iconBtn, "w-auto px-4 text-xs font-medium")} aria-label="Switch language">{labels.language}</button></form>
             <div className="flex items-center gap-2.5 rounded-full bg-surface py-1 pe-4 ps-1 shadow-card">
-              <span aria-hidden className="grid size-8 place-items-center rounded-full bg-[#d0e1f5] text-xs font-semibold text-[#14181f]">{initials(userName)}</span>
+              <span aria-hidden className="grid size-8 place-items-center rounded-full brand-grad text-xs font-semibold text-white">{initials(userName)}</span>
               <div className="hidden text-start text-xs leading-tight xl:block"><div className="max-w-36 truncate font-medium">{userName}</div><div className="max-w-36 truncate capitalize text-muted">{roles}</div></div>
             </div>
           </div>

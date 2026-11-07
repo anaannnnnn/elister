@@ -1,15 +1,13 @@
 import type { ReactNode, ButtonHTMLAttributes, InputHTMLAttributes, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
 import { clsx } from "clsx";
 import { AlertTriangle, CheckCircle2, Info, Lock, TrendingDown, TrendingUp } from "lucide-react";
+import { RouteIcon } from "@/ui/shell/RouteIcon";
 
 export const cn = clsx;
 
-export type Tone = "peach" | "sky" | "lilac" | "mint" | "sand" | "rose" | "grey";
-const TONE: Record<Tone, string> = { peach: "bg-peach", sky: "bg-sky", lilac: "bg-lilac", mint: "bg-mint", sand: "bg-sand", rose: "bg-rose", grey: "bg-grey" };
-
-export function Card({ title, action, children, className, flush, tone }: { title?: ReactNode; action?: ReactNode; children: ReactNode; className?: string; flush?: boolean; tone?: Tone }) {
+export function Card({ title, action, children, className, flush }: { title?: ReactNode; action?: ReactNode; children: ReactNode; className?: string; flush?: boolean }) {
   return (
-    <section className={cn("panel overflow-hidden rounded-[28px]", tone && TONE[tone], className)}>
+    <section className={cn("panel overflow-hidden rounded-[28px]", className)}>
       {(title || action) && (
         <header className="flex items-center justify-between gap-3 px-6 pt-5">
           <h2 className="text-[17px] font-medium tracking-tight">{title}</h2>
@@ -28,7 +26,7 @@ export function Stat({ label, value, hint, tone, icon, trend }: { label: string;
     <div className="stat-tile panel panel-hover rounded-[28px] p-5">
       <div className="flex items-start justify-between gap-2">
         <div className="text-[13px] font-medium leading-snug text-fg/70">{label}</div>
-        {icon && <span className="grid size-9 shrink-0 place-items-center rounded-full bg-surface-2 text-fg">{icon}</span>}
+        {icon && <span className="grid size-9 shrink-0 place-items-center rounded-full bg-tint text-primary">{icon}</span>}
       </div>
       <div className={cn("mt-5 text-[32px] font-light leading-none tracking-tight tabular-nums", tone === "ok" && "text-ok", tone === "warn" && "text-warn", tone === "danger" && "text-danger")}>{value}</div>
       <div className="mt-3 flex min-h-5 flex-wrap items-center gap-2 text-xs text-fg/70">
@@ -101,10 +99,13 @@ export function Alert({ tone = "danger", children }: { tone?: "danger" | "ok" | 
 export function PageHeader({ title, sub, actions, eyebrow }: { title: ReactNode; sub?: ReactNode; actions?: ReactNode; eyebrow?: ReactNode }) {
   return (
     <div className="page-in mb-6 flex flex-wrap items-end justify-between gap-4">
-      <div className="min-w-0">
-        {eyebrow && <div className="mb-1 text-sm text-muted">{eyebrow}</div>}
-        <h1 className="text-[34px] font-light leading-[1.1] tracking-tight text-fg">{title}</h1>
-        {sub && <p className="mt-2 max-w-3xl text-sm text-muted">{sub}</p>}
+      <div className="flex min-w-0 items-center gap-4">
+        <span aria-hidden className="hidden size-14 shrink-0 place-items-center rounded-full bg-tint text-primary sm:grid"><RouteIcon size={26} /></span>
+        <div className="min-w-0">
+          {eyebrow && <div className="mb-1 text-sm text-muted">{eyebrow}</div>}
+          <h1 className="text-[34px] font-light leading-[1.1] tracking-tight text-fg">{title}</h1>
+          {sub && <p className="mt-2 max-w-3xl text-sm text-muted">{sub}</p>}
+        </div>
       </div>
       <div className="flex flex-wrap items-center gap-2">{actions}</div>
     </div>
@@ -117,7 +118,7 @@ export const aed = (v: string | number) => `AED ${Number(v).toLocaleString("en-A
 export function NoAccess({ what = "this page" }: { what?: string }) {
   return (
     <div className="mx-auto max-w-md pt-16 text-center" role="alert">
-      <div className="mx-auto mb-4 grid size-14 place-items-center rounded-full bg-sky text-fg"><Lock size={22} /></div>
+      <div className="mx-auto mb-4 grid size-14 place-items-center rounded-full bg-tint text-primary"><Lock size={22} /></div>
       <h1 className="text-lg font-medium">Access restricted</h1>
       <p className="mt-1 text-sm text-muted">Your role does not have permission to view {what}. Ask an administrator if you need access.</p>
     </div>
@@ -151,7 +152,7 @@ export function BarList({ rows, empty = "No data in this period." }: { rows: { l
   );
 }
 
-const DONUT = ["#0b6f98", "#0aa39a", "#76a1f3", "#9ab9d6", "#bcd0e4", "#d9e4ef"];
+const DONUT = ["#0b3558", "#0a7ba5", "#00a0a0", "#3bb8d0", "#8fd3e0", "#cfe9ef"];
 /** Accessible donut chart with a legend. */
 export function Donut({ parts, centre }: { parts: { label: string; value: number; display: string }[]; centre?: ReactNode }) {
   const total = parts.reduce((a, p) => a + p.value, 0);
