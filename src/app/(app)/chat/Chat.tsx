@@ -50,8 +50,8 @@ export function Chat({ initial }: { initial: { me: string; channels: Chan[]; peo
     lastAt.current = undefined; stick.current = true; setMsgs([]); setErr("");
     if (!active) return;
     let stop = false;
-    const pull = async () => {
-      if (stop || document.hidden) return;
+    const pull = async (force = false) => {
+      if (stop || (document.hidden && !force)) return;
       try {
         const j = await api<{ messages: Msg[] }>(`/api/chat/messages?c=${encodeURIComponent(active)}${lastAt.current ? `&after=${encodeURIComponent(lastAt.current)}` : ""}`);
         if (stop || activeRef.current !== active || !j.messages.length) return;
@@ -60,8 +60,8 @@ export function Chat({ initial }: { initial: { me: string; channels: Chan[]; peo
         void refreshList();
       } catch { /* try again on the next tick */ }
     };
-    void pull();
-    const t = setInterval(pull, 2500);
+    void pull(true);
+    const t = setInterval(() => void pull(), 2500);
     return () => { stop = true; clearInterval(t); };
   }, [active, refreshList]);
   /* eslint-enable react-hooks/set-state-in-effect */

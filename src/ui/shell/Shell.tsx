@@ -79,7 +79,7 @@ export function Shell({
             <span className="rail-label min-w-0"><span className="block truncate text-sm font-medium">{orgName}</span><span className="block truncate text-xs text-white/55">{branch}</span></span>
           </Link>
           <nav ref={navRef} aria-label="Primary" className="rail-nav relative flex-1 overflow-y-auto overflow-x-hidden px-3 pb-3">
-            <span aria-hidden className={cn("rail-dot pointer-events-none absolute start-3 size-11 rounded-full brand-grad shadow-[0_8px_18px_-8px_rgba(0,160,160,.8)]", dot.ready ? "opacity-100" : "opacity-0")} style={{ top: dot.y }} />
+            <span aria-hidden className={cn("rail-dot pointer-events-none absolute inset-x-3 h-11 rounded-full brand-grad shadow-[0_8px_18px_-8px_rgba(0,160,160,.8)]", dot.ready ? "opacity-100" : "opacity-0")} style={{ top: dot.y }} />
             {grouped.map(({ g, rows }, gi) => (
               <Fragment key={g}>
                 {gi > 0 && <div aria-hidden className="mx-3 my-2 h-px bg-white/10" />}

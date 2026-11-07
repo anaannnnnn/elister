@@ -137,7 +137,7 @@ body { background: var(--bg); color: var(--fg); font-size: 14px; line-height: 1.
 .rail .rail-label { opacity: 0; transform: translateX(-4px); transition: opacity 0.2s, transform 0.25s; white-space: nowrap; }
 .rail:hover .rail-label, .rail:focus-within .rail-label { opacity: 1; transform: none; transition-delay: 0.08s; }
 [dir="rtl"] .rail .rail-label { transform: translateX(4px); }
-.rail-dot { transition: top 0.38s cubic-bezier(0.3, 1.25, 0.4, 1), opacity 0.2s; }
+.rail-dot { transition: top 0.55s cubic-bezier(0.65, 0.05, 0.2, 1), opacity 0.2s; }
 .rail-nav { scrollbar-width: none; }
 .rail-nav::-webkit-scrollbar { display: none; }
 
