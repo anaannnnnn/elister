@@ -6,14 +6,14 @@ export const cn = clsx;
 
 export function Card({ title, action, children, className, flush }: { title?: ReactNode; action?: ReactNode; children: ReactNode; className?: string; flush?: boolean }) {
   return (
-    <section className={cn("overflow-hidden rounded-2xl border border-border bg-surface shadow-card", className)}>
+    <section className={cn("panel overflow-hidden rounded-3xl", className)}>
       {(title || action) && (
-        <header className="flex items-center justify-between gap-3 border-b border-border/70 px-5 py-3.5">
-          <h2 className="flex items-center gap-2.5 text-sm font-semibold tracking-tight"><span aria-hidden className="h-4 w-1 rounded-full accent-grad" />{title}</h2>
+        <header className="flex items-center justify-between gap-3 px-6 pb-1 pt-5">
+          <h2 className="flex items-center gap-2.5 text-[15px] font-medium tracking-tight"><span aria-hidden className="size-2 rounded-full accent-grad" />{title}</h2>
           {action}
         </header>
       )}
-      <div className={flush ? "" : "p-5"}>{children}</div>
+      <div className={flush ? "" : "p-6 pt-4"}>{children}</div>
     </section>
   );
 }
@@ -22,15 +22,14 @@ export function Stat({ label, value, hint, tone, icon, trend }: { label: string;
   const t = trend && trend.pct !== null ? trend : null;
   const good = t ? (t.goodWhen === "down" ? t.pct! <= 0 : t.pct! >= 0) : true;
   return (
-    <div className="group relative overflow-hidden rounded-2xl border border-border bg-surface p-4 shadow-card transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-pop)]">
-      <span aria-hidden className={cn("absolute inset-x-0 top-0 h-0.5", tone === "danger" ? "bg-danger" : tone === "warn" ? "bg-warn" : tone === "ok" ? "bg-ok" : "brand-grad")} />
+    <div className="stat-tile group relative overflow-hidden rounded-3xl border border-white/60 p-5 shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-pop)] dark:border-white/5">
       <div className="flex items-start justify-between gap-2">
-        <div className="text-[11px] font-semibold uppercase tracking-wider text-muted">{label}</div>
-        {icon && <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-primary/15 to-teal/15 text-primary">{icon}</span>}
+        <div className="text-xs font-medium text-muted">{label}</div>
+        {icon && <span className="grid size-9 shrink-0 place-items-center rounded-full bg-surface/80 text-fg shadow-sm">{icon}</span>}
       </div>
-      <div className={cn("mt-2 text-[26px] font-semibold leading-none tracking-tight tabular-nums", tone === "ok" && "text-ok", tone === "warn" && "text-warn", tone === "danger" && "text-danger")}>{value}</div>
-      <div className="mt-2 flex min-h-5 items-center gap-2 text-xs text-muted">
-        {t && <span className={cn("inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 font-medium", good ? "bg-ok/12 text-ok" : "bg-danger/12 text-danger")}>{t.pct! >= 0 ? <TrendingUp size={12} /> : <TrendingDown size={12} />}{Math.abs(t.pct!).toFixed(1)}%</span>}
+      <div className={cn("mt-3 text-[28px] font-medium leading-none tracking-tight tabular-nums", tone === "ok" && "text-ok", tone === "warn" && "text-warn", tone === "danger" && "text-danger")}>{value}</div>
+      <div className="mt-3 flex min-h-5 items-center gap-2 text-xs text-muted">
+        {t && <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium", good ? "bg-ok/15 text-ok" : "bg-danger/15 text-danger")}>{t.pct! >= 0 ? <TrendingUp size={12} /> : <TrendingDown size={12} />}{Math.abs(t.pct!).toFixed(1)}%</span>}
         {hint}
       </div>
     </div>
@@ -38,11 +37,11 @@ export function Stat({ label, value, hint, tone, icon, trend }: { label: string;
 }
 
 export function Badge({ children, tone = "neutral" }: { children: ReactNode; tone?: "neutral" | "ok" | "warn" | "danger" | "info" }) {
-  const t = { neutral: "bg-surface-2 text-muted", ok: "bg-ok/12 text-ok", warn: "bg-warn/14 text-warn", danger: "bg-danger/12 text-danger", info: "bg-primary/12 text-primary" }[tone];
+  const t = { neutral: "bg-surface-2 text-muted", ok: "bg-ok/14 text-ok", warn: "bg-warn/16 text-warn", danger: "bg-danger/14 text-danger", info: "bg-primary/14 text-primary" }[tone];
   return <span className={cn("inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium", t)}><span aria-hidden className="size-1.5 rounded-full bg-current opacity-80" />{children}</span>;
 }
 
-const field = "w-full rounded-xl border border-border bg-surface px-3.5 py-2.5 text-sm text-fg shadow-[inset_0_1px_0_rgba(255,255,255,.4)] transition placeholder:text-muted/70 hover:border-primary/40 focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/15 disabled:opacity-60";
+const field = "w-full rounded-2xl border border-transparent bg-surface-2 px-4 py-2.5 text-sm text-fg transition placeholder:text-muted/70 hover:bg-surface-2/70 hover:border-border focus:border-primary/50 focus:bg-surface focus:outline-none focus:ring-4 focus:ring-primary/15 disabled:opacity-60";
 export const Input = (p: InputHTMLAttributes<HTMLInputElement>) => <input {...p} className={cn(field, p.className)} />;
 export const Select = (p: SelectHTMLAttributes<HTMLSelectElement>) => <select {...p} className={cn(field, "pe-8", p.className)} />;
 export const Textarea = (p: TextareaHTMLAttributes<HTMLTextAreaElement>) => <textarea {...p} className={cn(field, "min-h-24", p.className)} />;
@@ -50,7 +49,7 @@ export const Textarea = (p: TextareaHTMLAttributes<HTMLTextAreaElement>) => <tex
 export function Field({ label, children, hint }: { label: string; children: ReactNode; hint?: string }) {
   return (
     <label className="block space-y-1.5">
-      <span className="text-xs font-semibold text-muted">{label}</span>
+      <span className="text-xs font-medium text-muted">{label}</span>
       {children}
       {hint && <span className="block text-xs text-muted">{hint}</span>}
     </label>
@@ -59,26 +58,26 @@ export function Field({ label, children, hint }: { label: string; children: Reac
 
 export function Button({ variant = "primary", className, ...p }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "ghost" | "danger" | "outline" }) {
   const v = {
-    primary: "brand-grad text-white shadow-[0_8px_18px_-8px_rgba(11,74,126,.7)] hover:brightness-110",
+    primary: "bg-fg text-bg shadow-[0_10px_22px_-12px_rgba(0,0,0,.55)] hover:opacity-90",
     ghost: "text-fg hover:bg-surface-2",
-    outline: "border border-border bg-surface text-fg hover:border-primary/50 hover:bg-surface-2",
-    danger: "bg-danger text-white shadow-[0_8px_18px_-10px_rgba(192,57,43,.8)] hover:brightness-110",
+    outline: "border border-border bg-surface text-fg hover:border-fg/30 hover:bg-surface-2",
+    danger: "bg-danger text-white shadow-[0_10px_22px_-12px_rgba(194,65,47,.8)] hover:brightness-110",
   }[variant];
-  return <button {...p} className={cn("inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50", v, className)} />;
+  return <button {...p} className={cn("inline-flex items-center justify-center gap-1.5 rounded-full px-5 py-2.5 text-sm font-medium transition-all active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50", v, className)} />;
 }
 
 export function Table({ head, children, empty }: { head: string[]; children: ReactNode; empty?: string }) {
   return (
-    <div className="overflow-x-auto rounded-xl border border-border/80">
+    <div className="overflow-x-auto rounded-2xl border border-border/70 bg-surface/60">
       <table className="w-full text-sm">
         <thead className="tint">
           <tr className="text-start">
             {head.map((h) => (
-              <th key={h} className="whitespace-nowrap px-3.5 py-2.5 text-start text-[11px] font-semibold uppercase tracking-wider text-muted">{h}</th>
+              <th key={h} className="whitespace-nowrap px-4 py-3 text-start text-[11px] font-medium uppercase tracking-wider text-muted">{h}</th>
             ))}
           </tr>
         </thead>
-        <tbody className="[&>tr]:border-t [&>tr]:border-border/70 [&>tr]:transition-colors [&>tr:hover]:bg-primary/[0.045] [&>tr>td]:px-3.5 [&>tr>td]:py-2.5">{children}</tbody>
+        <tbody className="[&>tr]:border-t [&>tr]:border-border/60 [&>tr]:transition-colors [&>tr:hover]:bg-primary/[0.06] [&>tr>td]:px-4 [&>tr>td]:py-3">{children}</tbody>
       </table>
       {empty && <p className="border-t border-border/70 px-3 py-8 text-center text-sm text-muted">{empty}</p>}
     </div>
@@ -89,7 +88,7 @@ export function Alert({ tone = "danger", children }: { tone?: "danger" | "ok" | 
   const t = { danger: "border-danger/30 bg-danger/8 text-danger", ok: "border-ok/30 bg-ok/8 text-ok", warn: "border-warn/35 bg-warn/10 text-warn" }[tone];
   const Icon = tone === "ok" ? CheckCircle2 : tone === "warn" ? Info : AlertTriangle;
   return (
-    <div role={tone === "danger" ? "alert" : "status"} className={cn("flex items-start gap-2.5 rounded-xl border px-3.5 py-2.5 text-sm", t)}>
+    <div role={tone === "danger" ? "alert" : "status"} className={cn("flex items-start gap-2.5 rounded-2xl border px-4 py-3 text-sm", t)}>
       <Icon size={16} className="mt-0.5 shrink-0" aria-hidden />
       <div className="min-w-0">{children}</div>
     </div>
@@ -100,8 +99,8 @@ export function PageHeader({ title, sub, actions, eyebrow }: { title: ReactNode;
   return (
     <div className="page-in mb-5 flex flex-wrap items-end justify-between gap-3">
       <div className="min-w-0">
-        {eyebrow && <div className="mb-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">{eyebrow}</div>}
-        <h1 className="text-2xl font-semibold tracking-tight text-primary-strong dark:text-fg">{title}</h1>
+        {eyebrow && <div className="mb-1 text-[11px] font-medium uppercase tracking-[0.16em] text-primary">{eyebrow}</div>}
+        <h1 className="text-[28px] font-medium leading-tight tracking-tight text-primary-strong">{title}</h1>
         {sub && <p className="mt-1 max-w-3xl text-sm text-muted">{sub}</p>}
       </div>
       <div className="flex items-center gap-2">{actions}</div>
@@ -115,7 +114,7 @@ export const aed = (v: string | number) => `AED ${Number(v).toLocaleString("en-A
 export function NoAccess({ what = "this page" }: { what?: string }) {
   return (
     <div className="mx-auto max-w-md pt-16 text-center" role="alert">
-      <div className="mx-auto mb-4 grid size-14 place-items-center rounded-2xl bg-primary/10 text-primary"><Lock size={24} /></div>
+      <div className="mx-auto mb-4 grid size-14 place-items-center rounded-full bg-primary/10 text-primary"><Lock size={24} /></div>
       <h1 className="text-lg font-semibold">Access restricted</h1>
       <p className="mt-1 text-sm text-muted">Your role does not have permission to view {what}. Ask an administrator if you need access.</p>
     </div>
@@ -124,10 +123,10 @@ export function NoAccess({ what = "this page" }: { what?: string }) {
 
 export function Tabs({ tabs, active, base = "" }: { tabs: { key: string; label: string }[]; active: string; base?: string }) {
   return (
-    <nav className="mb-1 inline-flex max-w-full flex-wrap gap-1 rounded-xl bg-surface-2 p-1" aria-label="Sections">
+    <nav className="panel mb-1 inline-flex max-w-full flex-wrap gap-1 rounded-full p-1.5" aria-label="Sections">
       {tabs.map((t) => (
         <a key={t.key} href={`${base}?tab=${t.key}`} aria-current={t.key === active ? "page" : undefined}
-          className={cn("rounded-lg px-3.5 py-1.5 text-sm transition-all", t.key === active ? "bg-surface font-semibold text-primary-strong shadow-sm ring-1 ring-primary/15 [box-shadow:inset_0_-2px_0_var(--teal)]" : "text-muted hover:text-fg")}>{t.label}</a>
+          className={cn("rounded-full px-4 py-1.5 text-sm transition-all", t.key === active ? "brand-grad font-medium text-white shadow-[0_8px_18px_-10px_rgba(76,127,230,.9)]" : "text-muted hover:bg-surface-2 hover:text-fg")}>{t.label}</a>
       ))}
     </nav>
   );
@@ -142,14 +141,14 @@ export function BarList({ rows, empty = "No data in this period." }: { rows: { l
       {rows.map((r) => (
         <li key={r.label} className="text-sm">
           <div className="mb-1.5 flex justify-between gap-3"><span className="truncate font-medium">{r.label}</span><span className="tabular-nums text-muted">{r.display}</span></div>
-          <div className="h-2.5 overflow-hidden rounded-full bg-surface-2" role="img" aria-label={`${r.label}: ${r.display}`}><div className="h-full rounded-full brand-grad transition-[width] duration-700" style={{ width: `${Math.max(3, (r.value / max) * 100)}%` }} /></div>
+          <div className="h-3 overflow-hidden rounded-full bg-surface-2" role="img" aria-label={`${r.label}: ${r.display}`}><div className="h-full rounded-full brand-grad transition-[width] duration-700" style={{ width: `${Math.max(3, (r.value / max) * 100)}%` }} /></div>
         </li>
       ))}
     </ul>
   );
 }
 
-const DONUT = ["#0b4a7e", "#0090c0", "#00a0a0", "#3bb8d0", "#7fd6e6", "#5b7a99"];
+const DONUT = ["#76a1f3", "#a79cf2", "#f2b79a", "#1aa8b4", "#4a5568", "#b9cdee"];
 /** Accessible donut chart with a legend. */
 export function Donut({ parts, centre }: { parts: { label: string; value: number; display: string }[]; centre?: ReactNode }) {
   const total = parts.reduce((a, p) => a + p.value, 0);

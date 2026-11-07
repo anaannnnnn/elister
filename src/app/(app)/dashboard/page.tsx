@@ -40,18 +40,20 @@ export default async function DashboardPage({ searchParams }: { searchParams: SP
 
   return (
     <div className="space-y-6">
-      <section className="brand-grad page-in relative overflow-hidden rounded-3xl p-6 text-white shadow-[var(--shadow-pop)] md:p-8">
-        <div aria-hidden className="pointer-events-none absolute -end-16 -top-16 size-72 rounded-full bg-white/10 blur-2xl" />
-        <div aria-hidden className="pointer-events-none absolute -bottom-24 start-1/3 size-72 rounded-full bg-cyan-200/20 blur-3xl" />
-        <div className="relative flex flex-wrap items-end justify-between gap-5">
+      <section className="hero-grad page-in relative overflow-hidden rounded-[32px] p-7 text-white shadow-[var(--shadow-pop)] md:p-10">
+        <div aria-hidden className="float-slow pointer-events-none absolute -end-16 -top-20 size-80 rounded-full bg-white/15 blur-3xl" />
+        <div aria-hidden className="pointer-events-none absolute -bottom-28 start-1/3 size-80 rounded-full bg-[#fadbca]/30 blur-3xl" />
+        <div aria-hidden className="pointer-events-none absolute end-20 top-1/2 size-56 -translate-y-1/2 rounded-full border border-white/20" />
+        <div aria-hidden className="pointer-events-none absolute end-8 top-1/2 size-96 -translate-y-1/2 rounded-full border border-white/10" />
+        <div className="relative flex flex-wrap items-end justify-between gap-6">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-100">{dubaiDate()}</p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight">{greeting()}, {ctx.name.replace(/\(.*?\)/g, "").trim().split(" ")[0]}</h1>
-            <p className="mt-1.5 max-w-xl text-sm text-white/75">{BRAND.tagline}.</p>
+            <p className="inline-flex rounded-full bg-white/15 px-3.5 py-1 text-[11px] font-medium uppercase tracking-[0.16em] ring-1 ring-white/20 backdrop-blur">{dubaiDate()}</p>
+            <h1 className="mt-4 text-4xl font-light leading-tight tracking-tight md:text-5xl">{greeting()}, <span className="font-medium">{ctx.name.replace(/\(.*?\)/g, "").trim().split(" ")[0]}</span></h1>
+            <p className="mt-2 max-w-xl text-sm font-light text-white/80">{BRAND.tagline}.</p>
           </div>
           {quick.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {quick.map((q) => <Link key={q.href} href={q.href} className="inline-flex items-center gap-2 rounded-xl bg-white/15 px-3.5 py-2.5 text-sm font-medium ring-1 ring-white/20 backdrop-blur transition hover:bg-white/25"><q.icon size={16} />{q.label}</Link>)}
+            <div className="flex flex-wrap gap-2.5">
+              {quick.map((q) => <Link key={q.href} href={q.href} className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-medium text-[#1f2a44] shadow-[0_14px_28px_-14px_rgba(0,0,0,.5)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_32px_-14px_rgba(0,0,0,.55)]"><q.icon size={16} />{q.label}</Link>)}
             </div>
           )}
         </div>
@@ -80,7 +82,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: SP
 
       {reception && (
         <section aria-label="Reception" className="space-y-3">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted">Reception · today</h2>
+          <h2 className="text-xs font-medium uppercase tracking-[0.16em] text-muted">Reception · today</h2>
           <div className="stagger grid grid-cols-2 gap-4 lg:grid-cols-5">
             <Stat label="Appointments" icon={<CalendarDays size={16} />} value={reception.todaysAppointments} />
             <Stat label="Expected arrivals" icon={<UserPlus size={16} />} value={reception.expectedArrivals} />
@@ -93,7 +95,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: SP
 
       {doctor && (
         <section aria-label="Doctor" className="space-y-3">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted">My day</h2>
+          <h2 className="text-xs font-medium uppercase tracking-[0.16em] text-muted">My day</h2>
           <div className="stagger grid grid-cols-2 gap-4 lg:grid-cols-4">
             <Stat label="Consultations" icon={<Stethoscope size={16} />} value={doctor.todaysConsultations} />
             <Stat label="Waiting" icon={<Clock size={16} />} value={doctor.waitingPatients} />
@@ -105,7 +107,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: SP
 
       {accounts && (
         <section aria-label="Accounts" className="space-y-3">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted">Finance · today</h2>
+          <h2 className="text-xs font-medium uppercase tracking-[0.16em] text-muted">Finance · today</h2>
           <div className="stagger grid grid-cols-2 gap-4 lg:grid-cols-4">
             <Stat label="Cash collected" icon={<Banknote size={16} />} value={aed(accounts.cashCollected)} />
             <Stat label="Card collected" icon={<Wallet size={16} />} value={aed(accounts.cardCollected)} />
@@ -115,9 +117,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: SP
         </section>
       )}
 
-      {recent.length > 0 && <Card title="Recently opened patients"><ul className="flex flex-wrap gap-2">{recent.map((r) => <li key={r.id}><Link className="inline-flex items-center gap-2 rounded-xl border border-border bg-surface px-3.5 py-2 text-sm transition hover:border-primary/40 hover:bg-surface-2" href={`/patients/${r.id}`}>{r.fullName} <span className="font-mono text-xs text-muted">{r.mrn}</span></Link></li>)}</ul></Card>}
+      {recent.length > 0 && <Card title="Recently opened patients"><ul className="flex flex-wrap gap-2">{recent.map((r) => <li key={r.id}><Link className="inline-flex items-center gap-2 rounded-full bg-surface-2 px-4 py-2 text-sm transition hover:bg-primary/10" href={`/patients/${r.id}`}>{r.fullName} <span className="font-mono text-xs text-muted">{r.mrn}</span></Link></li>)}</ul></Card>}
 
-      <details className="rounded-2xl border border-border bg-surface p-4 text-sm shadow-card"><summary className="cursor-pointer font-semibold">Customise my dashboard</summary>
+      <details className="panel rounded-3xl p-5 text-sm"><summary className="cursor-pointer font-semibold">Customise my dashboard</summary>
         <form action={dispatch} className="mt-3 flex flex-wrap items-center gap-4"><input type="hidden" name="_a" value="prefs.widgets" /><input type="hidden" name="_back" value="/dashboard" />
           {ALL_WIDGETS.map((w) => <label key={w} className="flex items-center gap-1.5 capitalize"><input type="checkbox" name="widget" value={w} defaultChecked={show(w)} /> {w}</label>)}<Button variant="outline">Save</Button></form>
         <p className="mt-2 text-xs text-muted">Only widgets your role may see are ever shown; this hides the ones you do not want.</p></details>
