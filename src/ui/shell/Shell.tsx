@@ -2,10 +2,9 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Bell, BedDouble, BookOpen, Bot, CalendarDays, ChevronsLeft, ChevronsRight, ClipboardCheck, Command, FlaskConical, Heart, Landmark, LayoutDashboard, ListOrdered, LogOut, MapPin, MessageSquare, Moon, Package, Pill, Receipt, Search, ShieldCheck, Sun, UserCog, Users } from "lucide-react";
+import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Bell, BedDouble, BookOpen, Bot, CalendarDays, ClipboardCheck, Command, FlaskConical, Heart, Landmark, LayoutDashboard, ListOrdered, LogOut, MessageSquare, Moon, Package, Pill, Receipt, Search, ShieldCheck, Sun, UserCog, Users } from "lucide-react";
 import { cn } from "@/ui/kit";
-import { LogoAuto } from "@/ui/brand";
 
 const ICONS = { dash: LayoutDashboard, users: Users, cal: CalendarDays, queue: ListOrdered, bill: Receipt, book: BookOpen, shield: ShieldCheck, med: Pill, flask: FlaskConical, box: Package, people: UserCog, heart: Heart, chat: MessageSquare, check: ClipboardCheck, bank: Landmark, bed: BedDouble, bot: Bot } as const;
 type Item = { href: string; label: string; icon: keyof typeof ICONS };
@@ -20,6 +19,8 @@ const GROUP_OF: Record<string, string> = {
 const ORDER = ["Overview", "Clinical", "Revenue", "Finance", "Operations", "People", "Platform"];
 
 const initials = (n: string) => n.replace(/\(.*?\)/g, "").split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase()).join("") || "U";
+const isActive = (path: string, href: string) => path === href || path.startsWith(href + "/");
+const iconBtn = "grid size-10 place-items-center rounded-full bg-surface text-fg shadow-card transition hover:bg-surface-2";
 
 export function Shell({
   items, quick, orgName, branch, userName, roles, locale, dir, labels, setLocale, signOut, unread, children,
@@ -29,18 +30,29 @@ export function Shell({
   setLocale: () => Promise<void>; signOut: () => Promise<void>; unread: number; children: ReactNode;
 }) {
   const path = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
   const [dark, setDark] = useState(false);
   const [open, setOpen] = useState(false);
+  const [dot, setDot] = useState<{ y: number; ready: boolean }>({ y: 0, ready: false });
+  const navRef = useRef<HTMLElement>(null);
 
-  /* Browser-only state (theme class, saved sidebar state) can only be read after mount. */
+  /* Browser-only state (theme class) can only be read after mount. */
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     document.documentElement.dir = dir;
     document.documentElement.lang = locale;
     setDark(document.documentElement.classList.contains("dark"));
-    try { setCollapsed(localStorage.getItem("nav-collapsed") === "1"); } catch { /* storage unavailable */ }
   }, [dir, locale]);
+  /* The rail indicator glides to the active link: measure after layout, again when fonts or the window change. */
+  useEffect(() => {
+    const place = () => {
+      const a = navRef.current?.querySelector<HTMLElement>("[aria-current='page']");
+      if (a) setDot((d) => (d.ready && d.y === a.offsetTop ? d : { y: a.offsetTop, ready: true }));
+      else setDot((d) => (d.ready ? { ...d, ready: false } : d));
+    };
+    place();
+    window.addEventListener("resize", place);
+    return () => window.removeEventListener("resize", place);
+  }, [path]);
   /* eslint-enable react-hooks/set-state-in-effect */
   useEffect(() => {
     const k = (e: KeyboardEvent) => { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); setOpen((o) => !o); } };
@@ -54,79 +66,78 @@ export function Shell({
     try { localStorage.setItem("theme", next ? "dark" : "light"); } catch { /* ignore */ }
     setDark(next);
   };
-  const toggleNav = () => {
-    setCollapsed((c) => { try { localStorage.setItem("nav-collapsed", c ? "0" : "1"); } catch { /* ignore */ } return !c; });
-  };
 
-  const crumbs = path.split("/").filter(Boolean);
   const grouped = useMemo(() => ORDER.map((g) => ({ g, rows: items.filter((i) => (GROUP_OF[i.href] ?? "Platform") === g) })).filter((x) => x.rows.length), [items]);
+  const pill = quick.slice(0, 3);
 
   return (
     <div dir={dir} lang={locale} className="flex min-h-screen">
-      <aside className={cn("no-print side-glass sticky top-0 hidden h-screen shrink-0 flex-col text-white transition-[width] duration-300 md:flex", collapsed ? "w-[76px]" : "w-64")}>
-        <div className={cn("flex h-16 items-center border-b border-white/10", collapsed ? "justify-center" : "px-5")}>
-          {collapsed ? <Image src="/brand/mark.png" alt="Elister Med" width={30} height={30} /> : <Image src="/brand/logo-header.png" alt="Elister Med" width={227} height={109} className="h-9 w-auto" priority />}
-        </div>
-        {!collapsed && (
-          <div className="mx-4 mt-4 flex items-center gap-2.5 rounded-2xl border border-white/10 bg-white/[0.07] px-3 py-2.5 text-xs shadow-[inset_0_1px_0_rgba(255,255,255,.12)]">
-            <MapPin size={15} className="shrink-0 text-cyan-200" /><div className="min-w-0"><div className="truncate font-semibold">{orgName}</div><div className="truncate text-white/60">{branch}</div></div>
-          </div>
-        )}
-        <nav aria-label="Primary" className="mt-3 flex-1 space-y-5 overflow-y-auto px-3 pb-3">
-          {grouped.map(({ g, rows }) => (
-            <div key={g}>
-              {!collapsed && <div className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/45">{g}</div>}
-              <div className="space-y-0.5">
+      <aside className="no-print relative hidden w-[92px] shrink-0 md:block">
+        <div className="rail side-glass fixed inset-y-3 start-3 z-30 flex flex-col overflow-hidden rounded-[34px] text-white">
+          <Link href="/dashboard" aria-label="Elister Med home" className="flex h-[76px] shrink-0 items-center gap-3 ps-3">
+            <span className="grid size-11 shrink-0 place-items-center rounded-full bg-white/10"><Image src="/brand/mark.png" alt="" width={26} height={26} priority /></span>
+            <span className="rail-label min-w-0"><span className="block truncate text-sm font-medium">{orgName}</span><span className="block truncate text-xs text-white/55">{branch}</span></span>
+          </Link>
+          <nav ref={navRef} aria-label="Primary" className="rail-nav relative flex-1 overflow-y-auto overflow-x-hidden px-3 pb-3">
+            <span aria-hidden className={cn("rail-dot pointer-events-none absolute start-3 size-11 rounded-full bg-[#d0e1f5]", dot.ready ? "opacity-100" : "opacity-0")} style={{ top: dot.y }} />
+            {grouped.map(({ g, rows }, gi) => (
+              <Fragment key={g}>
+                {gi > 0 && <div aria-hidden className="mx-3 my-2 h-px bg-white/10" />}
                 {rows.map((i) => {
                   const Icon = ICONS[i.icon];
-                  const active = path === i.href || path.startsWith(i.href + "/");
+                  const active = isActive(path, i.href);
                   return (
                     <Link key={i.href} href={i.href} title={i.label} aria-current={active ? "page" : undefined}
-                      className={cn("group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors", collapsed && "justify-center", active ? "bg-white/[0.15] font-medium text-white shadow-[inset_0_1px_0_rgba(255,255,255,.22),0_8px_18px_-10px_rgba(0,0,0,.5)]" : "text-white/70 hover:bg-white/[0.08] hover:text-white")}>
-                      {active && <span aria-hidden className="absolute inset-y-2 start-0 w-1 rounded-e-full bg-gradient-to-b from-cyan-200 to-teal-300" />}
-                      <Icon size={18} className={cn("shrink-0", active ? "text-cyan-200" : "text-white/60 group-hover:text-cyan-200")} />
-                      {!collapsed && <span className="truncate">{i.label}</span>}
+                      className={cn("group relative z-10 flex h-11 items-center gap-3 rounded-full text-sm transition-colors", active ? "text-[#14181f]" : "text-white/65 hover:text-white", active && !dot.ready && "bg-[#d0e1f5]")}>
+                      <span className={cn("grid size-11 shrink-0 place-items-center rounded-full transition-colors", !active && "group-hover:bg-white/10")}><Icon size={19} strokeWidth={1.75} /></span>
+                      <span className={cn("rail-label truncate pe-4", active && "font-medium")}>{i.label}</span>
                     </Link>
                   );
                 })}
-              </div>
-            </div>
-          ))}
-        </nav>
-        <div className="border-t border-white/10 p-3">
-          <button onClick={toggleNav} aria-label="Toggle sidebar" className={cn("flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs text-white/60 transition-colors hover:bg-white/[0.08] hover:text-white", collapsed && "justify-center")}>
-            {collapsed ? <ChevronsRight size={16} /> : <><ChevronsLeft size={16} /> Collapse</>}
-          </button>
+              </Fragment>
+            ))}
+          </nav>
+          <div className="flex shrink-0 flex-col items-start gap-1 border-t border-white/10 px-3 py-3">
+            <button onClick={toggleTheme} aria-label="Toggle theme" className="group flex h-11 w-full items-center gap-3 rounded-full text-sm text-white/65 hover:text-white">
+              <span className="grid size-11 shrink-0 place-items-center rounded-full group-hover:bg-white/10">{dark ? <Sun size={19} strokeWidth={1.75} /> : <Moon size={19} strokeWidth={1.75} />}</span>
+              <span className="rail-label">{dark ? "Light mode" : "Dark mode"}</span>
+            </button>
+            <form action={signOut} className="w-full">
+              <button aria-label={labels.signOut} className="group flex h-11 w-full items-center gap-3 rounded-full text-sm text-white/65 hover:text-white">
+                <span className="grid size-11 shrink-0 place-items-center rounded-full group-hover:bg-white/10"><LogOut size={19} strokeWidth={1.75} /></span>
+                <span className="rail-label">{labels.signOut}</span>
+              </button>
+            </form>
+          </div>
         </div>
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="no-print glass sticky top-0 z-20 flex h-16 items-center gap-3 rounded-none border-x-0 border-t-0 px-4 md:px-8">
-          <Link href="/dashboard" className="shrink-0 md:hidden" aria-label="Elister Med home"><LogoAuto className="h-9" /></Link>
-          <nav aria-label="Breadcrumb" className="hidden min-w-0 items-center gap-1.5 text-sm text-muted sm:flex">
-            <Link href="/dashboard" className="hover:text-fg">Home</Link>
-            {crumbs.map((c, i) => (
-              <span key={i} className="flex items-center gap-1.5"><span aria-hidden className="text-border">/</span><span className={cn("truncate capitalize", i === crumbs.length - 1 && "font-semibold text-fg")}>{decodeURIComponent(c).slice(0, 24)}</span></span>
+      <div className="flex min-w-0 flex-1 flex-col md:pe-3">
+        <header className="no-print sticky top-0 z-20 flex items-center gap-3 bg-bg px-4 py-3 md:px-6 md:ps-3">
+          <Link href="/dashboard" className="grid size-10 shrink-0 place-items-center rounded-full bg-rail md:hidden" aria-label="Elister Med home"><Image src="/brand/mark.png" alt="" width={22} height={22} /></Link>
+          <div className="hidden min-w-0 items-center gap-3 text-sm lg:flex">
+            <span className="truncate font-medium">{orgName}</span><span aria-hidden className="h-4 w-px bg-border" /><span className="truncate text-muted">{branch}</span>
+          </div>
+          <div className="mx-auto flex items-center gap-1 rounded-full bg-ink p-1.5 text-[12.5px] text-[var(--btn-fg)] shadow-[0_14px_30px_-14px_rgba(20,24,31,.6)]">
+            {pill.map((q, n) => (
+              <Link key={q.href} href={q.href} className={cn("whitespace-nowrap rounded-full px-4 py-2 font-medium transition-colors", n === 0 ? "bg-[var(--btn-fg)] text-ink" : "hidden opacity-80 hover:bg-white/10 hover:opacity-100 md:inline-flex dark:hover:bg-black/10")}>{q.label}</Link>
             ))}
-          </nav>
-          <div className="ms-auto flex items-center gap-1.5">
-            <button onClick={() => setOpen(true)} className="flex items-center gap-2 rounded-xl border border-white/80 bg-white/55 px-3 py-2 text-xs text-muted shadow-[inset_0_1px_0_rgba(255,255,255,.9)] transition-colors hover:bg-white/85 dark:border-white/10 dark:bg-white/[0.06] dark:shadow-none dark:hover:bg-white/10" aria-label="Open command palette">
-              <Search size={14} /> <span className="hidden sm:inline">{labels.search}</span> <kbd className="hidden rounded-md border border-border bg-surface-2 px-1.5 py-0.5 text-[10px] sm:inline">Ctrl K</kbd>
+            <button onClick={() => setOpen(true)} aria-label="Open command palette" className="flex items-center gap-2 whitespace-nowrap rounded-full px-4 py-2 opacity-80 transition hover:bg-white/10 hover:opacity-100 dark:hover:bg-black/10">
+              <Search size={14} /><span className="hidden sm:inline">{labels.search}</span><kbd className="hidden rounded-md border border-current/25 px-1.5 text-[10px] opacity-70 lg:inline">Ctrl K</kbd>
             </button>
-            <Link href="/notifications" aria-label={`Notifications${unread ? ` (${unread} unread)` : ""}`} className="relative grid size-10 place-items-center rounded-xl text-muted transition-colors hover:bg-surface-2 hover:text-fg"><Bell size={18} />{unread > 0 && <span className="absolute end-1 top-1 grid min-w-4 place-items-center rounded-full bg-danger px-1 text-[10px] font-semibold text-white ring-2 ring-surface">{unread > 9 ? "9+" : unread}</span>}</Link>
-            <form action={setLocale}><button className="rounded-xl px-3 py-2 text-xs font-medium text-muted transition-colors hover:bg-surface-2 hover:text-fg" aria-label="Switch language">{labels.language}</button></form>
-            <button onClick={toggleTheme} aria-label="Toggle theme" className="grid size-10 place-items-center rounded-xl text-muted transition-colors hover:bg-surface-2 hover:text-fg">{dark ? <Sun size={18} /> : <Moon size={18} />}</button>
-            <div className="mx-2 hidden h-8 w-px bg-border sm:block" />
-            <div className="hidden items-center gap-2.5 sm:flex">
-              <span aria-hidden className="btn-gloss grid size-9 place-items-center rounded-full text-xs font-semibold">{initials(userName)}</span>
-              <div className="text-start text-xs leading-tight"><div className="max-w-40 truncate font-semibold">{userName}</div><div className="max-w-40 truncate capitalize text-muted">{roles}</div></div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link href="/notifications" aria-label={`Notifications${unread ? ` (${unread} unread)` : ""}`} className={cn(iconBtn, "relative")}><Bell size={17} />{unread > 0 && <span className="absolute end-0 top-0 grid min-w-4 place-items-center rounded-full bg-danger px-1 text-[10px] font-semibold text-white ring-2 ring-bg">{unread > 9 ? "9+" : unread}</span>}</Link>
+            <form action={setLocale} className="hidden sm:block"><button className={cn(iconBtn, "w-auto px-4 text-xs font-medium")} aria-label="Switch language">{labels.language}</button></form>
+            <div className="flex items-center gap-2.5 rounded-full bg-surface py-1 pe-4 ps-1 shadow-card">
+              <span aria-hidden className="grid size-8 place-items-center rounded-full bg-[#d0e1f5] text-xs font-semibold text-[#14181f]">{initials(userName)}</span>
+              <div className="hidden text-start text-xs leading-tight xl:block"><div className="max-w-36 truncate font-medium">{userName}</div><div className="max-w-36 truncate capitalize text-muted">{roles}</div></div>
             </div>
-            <form action={signOut}><button aria-label={labels.signOut} title={labels.signOut} className="ms-2 flex items-center gap-1.5 rounded-xl border border-white/80 bg-white/55 px-3 py-2 text-xs font-medium backdrop-blur transition-colors hover:border-danger/40 hover:text-danger dark:border-white/10 dark:bg-white/[0.06]"><LogOut size={14} /><span className="hidden lg:inline">{labels.signOut}</span></button></form>
           </div>
         </header>
         <MobileNav items={items} path={path} />
-        <main className="flex-1 p-4 md:p-8"><div className="mx-auto max-w-[1400px]">{children}</div></main>
-        <footer className="no-print px-6 py-4 text-center text-[11px] text-muted"><Image src="/brand/mark.png" alt="" aria-hidden width={14} height={14} className="me-1.5 inline-block align-[-2px]" />Elister Med · Your Trusted Family Healthcare Partner in Dubai · Demo environment with synthetic data</footer>
+        <main className="flex-1 px-4 pb-8 pt-3 md:px-6 md:ps-3"><div className="mx-auto max-w-[1480px]">{children}</div></main>
+        <footer className="no-print px-6 py-4 text-center text-[11px] text-muted">Elister Med · Your Trusted Family Healthcare Partner in Dubai · Demo environment with synthetic data</footer>
       </div>
       {open && <Palette onClose={() => setOpen(false)} entries={[...items.map((i) => ({ href: i.href, label: i.label })), ...quick]} />}
     </div>
@@ -135,9 +146,9 @@ export function Shell({
 
 function MobileNav({ items, path }: { items: Item[]; path: string }) {
   return (
-    <nav aria-label="Mobile" className="no-print glass flex gap-1.5 overflow-x-auto border-x-0 border-t-0 px-3 py-2 md:hidden">
+    <nav aria-label="Mobile" className="no-print flex gap-1.5 overflow-x-auto px-4 pb-2 md:hidden">
       {items.map((i) => (
-        <Link key={i.href} href={i.href} className={cn("shrink-0 rounded-full px-3.5 py-1.5 text-xs font-medium", path.startsWith(i.href) ? "btn-gloss" : "bg-white/60 text-muted dark:bg-white/10")}>{i.label}</Link>
+        <Link key={i.href} href={i.href} aria-current={isActive(path, i.href) ? "page" : undefined} className={cn("shrink-0 rounded-full px-4 py-2 text-xs font-medium", isActive(path, i.href) ? "bg-ink text-[var(--btn-fg)]" : "bg-surface text-muted shadow-card")}>{i.label}</Link>
       ))}
     </nav>
   );
@@ -151,10 +162,10 @@ function Palette({ entries, onClose }: { entries: { href: string; label: string 
   const list = useMemo(() => entries.filter((e) => e.label.toLowerCase().includes(q.toLowerCase())), [entries, q]);
   const go = (href: string) => { onClose(); window.location.assign(href); };
   return (
-    <div role="dialog" aria-modal="true" aria-label="Command palette" className="fixed inset-0 z-50 grid place-items-start justify-center bg-[#06161f]/50 p-4 pt-24 backdrop-blur-md" onClick={onClose}>
-      <div className="w-full max-w-lg panel glass-strong overflow-hidden rounded-3xl shadow-[var(--shadow-pop)]" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center gap-3 border-b border-border px-4"><Command size={16} className="text-muted" />
-          <input ref={ref} value={q} onChange={(e) => { setQ(e.target.value); setIdx(0); }} placeholder="Type a command or page…" className="w-full bg-transparent py-3.5 text-sm outline-none"
+    <div role="dialog" aria-modal="true" aria-label="Command palette" className="fixed inset-0 z-50 grid place-items-start justify-center bg-black/40 p-4 pt-24" onClick={onClose}>
+      <div className="panel w-full max-w-lg overflow-hidden rounded-[28px] shadow-[var(--shadow-pop)]" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-3 border-b border-border px-5"><Command size={16} className="text-muted" />
+          <input ref={ref} value={q} onChange={(e) => { setQ(e.target.value); setIdx(0); }} placeholder="Type a command or page…" className="w-full bg-transparent py-4 text-sm outline-none"
             onKeyDown={(e) => {
               if (e.key === "Escape") onClose();
               if (e.key === "ArrowDown") { e.preventDefault(); setIdx((i) => Math.min(i + 1, list.length - 1)); }
@@ -164,7 +175,7 @@ function Palette({ entries, onClose }: { entries: { href: string; label: string 
         <ul className="max-h-80 overflow-auto p-2">
           {list.map((e, i) => (
             <li key={e.href + e.label}>
-              <button onClick={() => go(e.href)} onMouseEnter={() => setIdx(i)} className={cn("w-full rounded-xl px-3 py-2.5 text-start text-sm transition-colors", i === idx && "bg-primary/12 text-primary-strong")}>{e.label}</button>
+              <button onClick={() => go(e.href)} onMouseEnter={() => setIdx(i)} className={cn("w-full rounded-2xl px-4 py-2.5 text-start text-sm transition-colors", i === idx && "bg-surface-2 font-medium")}>{e.label}</button>
             </li>
           ))}
           {list.length === 0 && <li className="px-3 py-8 text-center text-sm text-muted">No results</li>}
