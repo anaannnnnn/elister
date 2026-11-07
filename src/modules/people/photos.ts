@@ -24,7 +24,8 @@ export async function savePhoto(ctx: Ctx, userId: string, data: Buffer): Promise
   const contentType = sniff(data);
   if (!contentType) throw new AppError("VALIDATION", "Use a JPEG, PNG or WebP image");
   const m = await tenantCol<{ userId: string }>(ctx.orgId, "memberships").findOne({ userId, active: true } as never);
-  if (!m) throw new AppError("NOT_FOUND", "That person is not on the staff list");
+  const s = m ?? (await tenantCol<{ _id: string }>(ctx.orgId, "staff").findOne({ _id: userId } as never));
+  if (!s) throw new AppError("NOT_FOUND", "That person is not on the staff list");
   await col(ctx.orgId).updateOne({ userId } as never, { $set: { userId, contentType, data: new Binary(data), size: data.length, at: new Date() }, $setOnInsert: { _id: `${ctx.orgId}:${userId}` } } as never, undefined, { upsert: true });
 }
 

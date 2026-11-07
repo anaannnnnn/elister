@@ -38,7 +38,7 @@ export default async function AppointmentsPage({ searchParams }: { searchParams:
   const ymd = (d: Date) => dubaiParts(d).ymd;
   const docName = new Map(doctors.map((d) => [d._id, d.name]));
   const can = (p: string) => ctx.permissions.includes(p as never);
-  const photos = await photoVersions(ctx.orgId, doctors.map((d) => d.userId));
+  const photos = await photoVersions(ctx.orgId, doctors.map((d) => d.userId ?? d._id));
   const today = dubaiParts(new Date()).dow;
 
   return (
@@ -51,7 +51,7 @@ export default async function AppointmentsPage({ searchParams }: { searchParams:
         <section aria-label="Our doctors" className="space-y-3">
           <h2 className="text-[22px] font-light tracking-tight">Our doctors</h2>
           <div className="-mx-1 flex snap-x gap-3 overflow-x-auto px-1 pb-2">
-            {doctors.map((d) => <DoctorCard key={d._id} doctor={d} today={today} photo={d.userId ? photos.get(d.userId) : null} canEditPhoto={can("hr:update")} bookHref={can("appointments:create") ? `?date=${date}#book` : undefined} />)}
+            {doctors.map((d) => <DoctorCard key={d._id} doctor={d} today={today} photo={photos.get(d.userId ?? d._id)} canEditPhoto={can("hr:update")} bookHref={can("appointments:create") ? `?date=${date}#book` : undefined} />)}
           </div>
         </section>
       )}

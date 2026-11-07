@@ -37,7 +37,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: SP
     can("appointments:view") ? listDoctors(ctx) : [],
   ]);
 
-  const photos = await photoVersions(ctx.orgId, doctors.map((d) => d.userId));
+  const photos = await photoVersions(ctx.orgId, doctors.map((d) => d.userId ?? d._id));
   const todayDow = dubaiParts(new Date()).dow;
   const launch = ([
     can("patients:create") && { href: "/patients/new", label: "Register patient", icon: UserPlus },
@@ -81,7 +81,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: SP
         <section aria-label="Doctors" className="space-y-3">
           <h2 className="text-[22px] font-light tracking-tight">Our doctors</h2>
           <div className="-mx-1 flex snap-x gap-3 overflow-x-auto px-1 pb-2">
-            {doctors.map((d) => <DoctorCard key={d._id} doctor={d} today={todayDow} photo={d.userId ? photos.get(d.userId) : null} canEditPhoto={can("hr:update")} bookHref={can("appointments:create") ? "/appointments#book" : undefined} />)}
+            {doctors.map((d) => <DoctorCard key={d._id} doctor={d} today={todayDow} photo={photos.get(d.userId ?? d._id)} canEditPhoto={can("hr:update")} bookHref={can("appointments:create") ? "/appointments#book" : undefined} />)}
           </div>
         </section>
       )}

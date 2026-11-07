@@ -14,7 +14,7 @@ export function Avatar({ name, userId, photo, size = 48, className }: { name: st
   const base = cn("shrink-0 rounded-full object-cover", className);
   if (userId && photo) {
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={`/api/photo/${userId}?v=${photo}`} alt="" width={size} height={size} loading="lazy" className={base} style={{ width: size, height: size }} />;
+    return <img src={`/api/photo/${encodeURIComponent(userId)}?v=${photo}`} alt="" width={size} height={size} loading="lazy" className={base} style={{ width: size, height: size }} />;
   }
   const clean = name.replace(/\s*\(.*?\)\s*/g, "").trim();
   const h = hash(clean || "staff");

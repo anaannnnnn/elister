@@ -28,7 +28,7 @@ export function PhotoUpload({ userId, label = "Change photo", compact, hasPhoto,
     try {
       const fd = new FormData();
       fd.set("file", await shrink(file), "photo.jpg");
-      const r = await fetch(`/api/photo/${userId}`, { method: "POST", body: fd });
+      const r = await fetch(`/api/photo/${encodeURIComponent(userId)}`, { method: "POST", body: fd });
       if (!r.ok) setErr(((await r.json().catch(() => null)) as { error?: string } | null)?.error ?? "Upload failed");
       else router.refresh();
     } catch { setErr("That file could not be read as a picture"); }
@@ -37,7 +37,7 @@ export function PhotoUpload({ userId, label = "Change photo", compact, hasPhoto,
   }
   async function remove() {
     setBusy(true); setErr("");
-    const r = await fetch(`/api/photo/${userId}`, { method: "DELETE" });
+    const r = await fetch(`/api/photo/${encodeURIComponent(userId)}`, { method: "DELETE" });
     if (!r.ok) setErr("Could not remove the photo"); else router.refresh();
     setBusy(false);
   }

@@ -12,12 +12,13 @@ const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Frid
 export function DoctorCard({ doctor: d, photo, canEditPhoto, today, bookHref }: { doctor: DoctorCardData; photo?: number | null; canEditPhoto?: boolean; today: number; bookHref?: string }) {
   const name = d.name.replace(/\s*\(.*?\)\s*/g, "").trim();
   const onToday = d.workDays.includes(today);
+  const key = d.userId ?? d._id; // doctors without a login still get a photo, keyed by their staff record
   return (
     <article className="panel flex w-[17rem] shrink-0 snap-start flex-col items-center rounded-[28px] p-5 text-center">
       <div className="relative">
-        <Avatar name={d.name} userId={d.userId} photo={photo} size={92} className="ring-4 ring-tint" />
+        <Avatar name={d.name} userId={key} photo={photo} size={92} className="ring-4 ring-tint" />
         <span title={onToday ? "Working today" : "Not working today"} className={cn("absolute bottom-1 end-1 size-4 rounded-full ring-2 ring-surface", onToday ? "bg-ok" : "bg-muted/50")} />
-        {canEditPhoto && d.userId && <PhotoUpload userId={d.userId} compact hasPhoto={!!photo} className="absolute -start-1 bottom-0" />}
+        {canEditPhoto && <PhotoUpload userId={key} compact hasPhoto={!!photo} className="absolute -start-1 bottom-0" />}
       </div>
       <h3 className="mt-3 text-[15px] font-medium leading-tight">{name}</h3>
       <p className="text-sm text-muted">{d.specialty ?? "Doctor"}</p>
